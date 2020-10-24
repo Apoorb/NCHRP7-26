@@ -47,7 +47,7 @@ def read_file_data(file_path, time, is_flow_volume, remove_lane_data_=[]):
         ]
         raw_data = raw_data[~raw_data.duplicated(["Timestamp", "Lane"], keep="first")]
     if len(remove_lane_data_) != 0:
-        raw_data = raw_data.loc[lambda df: ~ df.Lane.isin(remove_lane_data_)]
+        raw_data = raw_data.loc[lambda df: ~df.Lane.isin(remove_lane_data_)]
     num_lanes = len(raw_data.Lane.unique())
     raw_data.Timestamp = pd.to_datetime(raw_data.Timestamp)
     raw_data_mainline_pivot = raw_data.pivot(
@@ -413,15 +413,16 @@ if __name__ == "__main__":
             add_ramp_volume_to_mainline = False
             ramp_volume, ramp_time = [], []  # Add empty values. Not using it for now.
 
-        if file == '99_Lane Drop Diverge_2.csv':
+        if file == "99_Lane Drop Diverge_2.csv":
             remove_lane_data = [2, 5]
         else:
             remove_lane_data = []
 
         speed_1, volume_1, date_time, lanes = read_file_data(
-            file_path, time,
+            file_path,
+            time,
             is_flow_volume=is_flow_volume_dict[file],
-            remove_lane_data_=remove_lane_data
+            remove_lane_data_=remove_lane_data,
         )
         volume_1, speed_1, ramp_volume_1, approach_time = approach_sped_volume_ramp(
             speed_1,

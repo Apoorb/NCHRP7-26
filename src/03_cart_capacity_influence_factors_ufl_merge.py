@@ -17,7 +17,7 @@ path_prebreakdown = os.path.join(
     r"C:\Users\abibeka\Documents_axb\nchrp7-26\regression_analysis_prebreakdown",
     "pre_breakdown_analysis_v1.xlsx",
 )
-path_figures = r"C:\Users\abibeka\Github\NCHRP 7-26\figures"
+path_figures = r"/figures"
 site_char = pd.read_excel(path_site_char, sheet_name="Merge", skiprows=1)
 site_char.columns = [
     inflection.underscore(re.sub("\W+", "_", col.strip())) for col in site_char.columns
@@ -68,7 +68,7 @@ site_char_fil = site_char.assign(
         "mainline_grade",
         "ramp_metering",
         "length_of_acceleration_lane",
-        "mainline_aadt_2018"
+        "mainline_aadt_2018",
     ],
     axis=1,
 )
@@ -92,8 +92,7 @@ prebreakdown_df_meta = prebreakdown_df.merge(site_char_fil, on="file", how="left
 
 
 prebreakdown_df_meta = (
-    prebreakdown_df_meta
-    .filter(
+    prebreakdown_df_meta.filter(
         items=[
             # "site_id",
             "ffs",
@@ -110,7 +109,7 @@ prebreakdown_df_meta = (
             "mainline_speed",
             "ramp_vol",
             "mainline_vol",
-            "mainline_aadt_2018"
+            "mainline_aadt_2018",
         ],
         axis=1,
     )
@@ -126,7 +125,7 @@ sns.pairplot(
             "number_of_mainline_lane_upstream",
             "length_of_acceleration_lane",
             "mainline_aadt_2018",
-            "breakdowns_by_tot"
+            "breakdowns_by_tot",
         ]
     ]
 )
@@ -141,8 +140,11 @@ lb.inverse_transform(prebreakdown_df_meta.ramp_metering)
 
 y = prebreakdown_df_meta.mainline_vol
 X = prebreakdown_df_meta[
-    [col for col in prebreakdown_df_meta.columns
-     if col not in ["mainline_vol", "estimated_capacity_veh_hr_ln"]]
+    [
+        col
+        for col in prebreakdown_df_meta.columns
+        if col not in ["mainline_vol", "estimated_capacity_veh_hr_ln"]
+    ]
 ]
 max_depth_ = 6
 clf = tree.DecisionTreeRegressor(max_depth=max_depth_)

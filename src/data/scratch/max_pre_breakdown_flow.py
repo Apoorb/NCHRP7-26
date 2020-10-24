@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import re
 
-path_to_interim = r"C:\Users\abibeka\Github\NCHRP 7-26\data\interim"
+path_to_interim = r"/data/interim"
 
 path_to_data_files = (
     r"C:\Users\abibeka\Github\NCHRP 7-26\data\interim\pre_breakdown_data"
