@@ -5,6 +5,8 @@ import inflection
 import re
 from sklearn import tree
 from sklearn import preprocessing
+import graphviz
+import seaborn as sns
 
 path_meta = (
     r"C:\Users\abibeka\Kittelson & Associates, Inc\Burak Cesme - "
@@ -15,8 +17,7 @@ path_prebreakdown = os.path.join(
     r"C:\Users\abibeka\Documents_axb\nchrp7-26\regression_analysis_prebreakdown",
     "pre_breakdown_analysis_v1.xlsx",
 )
-
-
+path_figures = r"C:\Users\abibeka\Github\NCHRP 7-26\figures"
 site_char = pd.read_excel(path_site_char, sheet_name="Merge", skiprows=1)
 site_char.columns = [
     inflection.underscore(re.sub("\W+", "_", col.strip())) for col in site_char.columns
@@ -67,6 +68,7 @@ site_char_fil = site_char.assign(
         "mainline_grade",
         "ramp_metering",
         "length_of_acceleration_lane",
+        "mainline_aadt_2018"
     ],
     axis=1,
 )
@@ -89,25 +91,44 @@ prebreakdown_df = pd.concat(list_prebreakdown_df)
 prebreakdown_df_meta = prebreakdown_df.merge(site_char_fil, on="file", how="left")
 
 
-prebreakdown_df_meta = prebreakdown_df_meta.filter(
-    items=[
-        # "site_id",
-        "ffs",
-        # "fix_ffs",
-        "total_counts",
-        "breakdown_events",
-        "estimated_capacity_veh_hr_ln",
-        "number_of_mainline_lane_upstream",
-        "number_of_on_ramp_lanes_at_ramp_terminal",
-        "hv",
-        "mainline_grade",
-        "ramp_metering",
-        "length_of_acceleration_lane",
-        "mainline_speed",
-        "ramp_vol",
-        "mainline_vol",
-    ],
-    axis=1,
+prebreakdown_df_meta = (
+    prebreakdown_df_meta
+    .filter(
+        items=[
+            # "site_id",
+            "ffs",
+            # "fix_ffs",
+            "total_counts",
+            "breakdown_events",
+            "estimated_capacity_veh_hr_ln",
+            "number_of_mainline_lane_upstream",
+            "number_of_on_ramp_lanes_at_ramp_terminal",
+            "hv",
+            "mainline_grade",
+            "ramp_metering",
+            "length_of_acceleration_lane",
+            "mainline_speed",
+            "ramp_vol",
+            "mainline_vol",
+            "mainline_aadt_2018"
+        ],
+        axis=1,
+    )
+    .rename(columns={"mainline_vol": "prebreakdown_volume"})
+    .assign(breakdowns_by_tot=lambda df: df.breakdown_events / df.total_counts)
+)
+
+sns.pairplot(
+    prebreakdown_df_meta[
+        [
+            "prebreakdown_volume",
+            "ramp_vol",
+            "number_of_mainline_lane_upstream",
+            "length_of_acceleration_lane",
+            "mainline_aadt_2018",
+            "breakdowns_by_tot"
+        ]
+    ]
 )
 
 lb = preprocessing.LabelBinarizer()
@@ -120,14 +141,13 @@ lb.inverse_transform(prebreakdown_df_meta.ramp_metering)
 
 y = prebreakdown_df_meta.mainline_vol
 X = prebreakdown_df_meta[
-    [col for col in prebreakdown_df_meta.columns if col != "mainline_vol"]
+    [col for col in prebreakdown_df_meta.columns
+     if col not in ["mainline_vol", "estimated_capacity_veh_hr_ln"]]
 ]
-clf = tree.DecisionTreeRegressor(max_depth=6)
+max_depth_ = 6
+clf = tree.DecisionTreeRegressor(max_depth=max_depth_)
 clf = clf.fit(X, y)
-# tree.plot_tree(clf)
 
-
-import graphviz
 
 dot_data = tree.export_graphviz(
     clf,
@@ -139,19 +159,4 @@ dot_data = tree.export_graphviz(
     special_characters=True,
 )
 graph = graphviz.Source(dot_data)
-graph.render("iris")
-
-import seaborn as sns
-
-sns.pairplot(
-    prebreakdown_df_meta[
-        [
-            "mainline_vol",
-            "ramp_vol",
-            "number_of_mainline_lane_upstream",
-            "length_of_acceleration_lane",
-        ]
-    ]
-)
-
-sns.boxplot(x="", y="")
+graph.render(os.path.join(path_figures, f"tree_depth_{max_depth_}"))

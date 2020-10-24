@@ -37,7 +37,7 @@ def define_defaults(file_, time_threshold_):
     return (file_path, start, time)
 
 
-def read_file_data(file_path, time, is_flow_volume):
+def read_file_data(file_path, time, is_flow_volume, remove_lane_data_=[]):
     raw_data = pd.read_csv(file_path, header=0)
     if is_flow_volume == "flow":
         raw_data.Volume = raw_data.Volume / 4
@@ -46,10 +46,11 @@ def read_file_data(file_path, time, is_flow_volume):
             raw_data.duplicated(["Timestamp", "Lane"], keep=False)
         ]
         raw_data = raw_data[~raw_data.duplicated(["Timestamp", "Lane"], keep="first")]
-    num_lanes = raw_data.Lane.max()
-    raw_data_mainline = raw_data.loc[lambda df: df.Lane != -1]  # Just use mainline
-    raw_data_mainline.Timestamp = pd.to_datetime(raw_data_mainline.Timestamp)
-    raw_data_mainline_pivot = raw_data_mainline.pivot(
+    if len(remove_lane_data_) != 0:
+        raw_data = raw_data.loc[lambda df: ~ df.Lane.isin(remove_lane_data_)]
+    num_lanes = len(raw_data.Lane.unique())
+    raw_data.Timestamp = pd.to_datetime(raw_data.Timestamp)
+    raw_data_mainline_pivot = raw_data.pivot(
         index="Timestamp", columns=["Lane"], values=["Volume", "Speed"]
     )
     raw_data_mainline_pivot_fil = raw_data_mainline_pivot.between_time(
@@ -388,8 +389,6 @@ if __name__ == "__main__":
         ran_files_no = [file.split("_")[0] for file in os.listdir(path_to_out_files)]
 
     for file, path in files_dict.items():
-        file = "19_Simple Merge_19.csv"
-        path = path_to_uw_clean_data
         print(file)
         file_sno = file.split("_")[0]
         if file_sno in ran_files_no:
@@ -414,8 +413,15 @@ if __name__ == "__main__":
             add_ramp_volume_to_mainline = False
             ramp_volume, ramp_time = [], []  # Add empty values. Not using it for now.
 
+        if file == '99_Lane Drop Diverge_2.csv':
+            remove_lane_data = [2, 5]
+        else:
+            remove_lane_data = []
+
         speed_1, volume_1, date_time, lanes = read_file_data(
-            file_path, time, is_flow_volume=is_flow_volume_dict[file]
+            file_path, time,
+            is_flow_volume=is_flow_volume_dict[file],
+            remove_lane_data_=remove_lane_data
         )
         volume_1, speed_1, ramp_volume_1, approach_time = approach_sped_volume_ramp(
             speed_1,
