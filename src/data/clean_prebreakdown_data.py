@@ -57,8 +57,11 @@ def clean_site_sum_merge(site_sum_merge_, iloc_max_row):
             .str.extract(r"(\d+)")
             .astype(int),
             ramp_metering=lambda df: np.select(
-                [df.metered_ramp.str.upper() == "NO",
-                 df.metered_ramp.str.upper() == "YES"], [False, True]
+                [
+                    df.metered_ramp.str.upper() == "NO",
+                    df.metered_ramp.str.upper() == "YES",
+                ],
+                [False, True],
             ),
             fix_ffs=lambda df: np.select(
                 [df.fix_ffs.isna(), ~df.fix_ffs.isna()], [False, True]
@@ -91,6 +94,7 @@ def clean_site_sum_merge(site_sum_merge_, iloc_max_row):
     )
     return site_sum_merge_fil_
 
+
 def clean_site_sum_diverge(site_sum_diverge_, iloc_max_row):
     site_sum_diverge_fil_ = (
         site_sum_diverge_.iloc[0:iloc_max_row, :]
@@ -107,9 +111,7 @@ def clean_site_sum_diverge(site_sum_diverge_, iloc_max_row):
             )
             .str.extract(r"(\d+)")
             .astype(int),
-            number_of_off_ramp_lane=lambda df: df.number_of_off_ramp_lane.astype(
-                str
-            )
+            number_of_off_ramp_lane=lambda df: df.number_of_off_ramp_lane.astype(str)
             .str.extract(r"(\d+)")
             .astype(int),
             length_of_deceleration_lane=lambda df: df.length_of_deceleration_lane.astype(
@@ -169,10 +171,14 @@ def clean_site_sum_weave(site_sum_weave_, iloc_max_row):
                 [df.ffs_fixed.isna(), ~df.ffs_fixed.isna()], [False, True]
             ),
             ramp_metering=lambda df: np.select(
-                [df.metered_ramp.str.upper() == "NO", df.metered_ramp.str.upper() == "YES"], [False, True]
+                [
+                    df.metered_ramp.str.upper() == "NO",
+                    df.metered_ramp.str.upper() == "YES",
+                ],
+                [False, True],
             ),
             breakdowns_by_tot=lambda df: df.breakdown_events / df.total_counts,
-            ffs = lambda df: df.free_flow_speed,
+            ffs=lambda df: df.free_flow_speed,
         )
         .filter(
             items=[
@@ -207,6 +213,7 @@ def clean_site_sum_weave(site_sum_weave_, iloc_max_row):
         )
     )
     return site_sum_weave_fil_
+
 
 def get_geometry_list(path_prebreakdown_all_):
     re_geometry_type = re.compile(
@@ -305,4 +312,3 @@ if __name__ == "__main__":
     prebreakdown_df_weave_meta.to_csv(
         os.path.join(path_interim, "prebreakdown_weave_and_meta.csv"), index=False
     )
-

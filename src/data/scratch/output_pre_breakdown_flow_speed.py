@@ -499,6 +499,7 @@ def estimated_capacity_fn(alpha, beta):
 
 
 def output_file(
+    path_interim,
     database,
     date_time,
     FFS,
@@ -510,9 +511,9 @@ def output_file(
     beta,
     lane,
 ):
-    filename = "Data_output.csv"
+    filename = os.path.join(path_interim, "Data_output.csv")
     if os.path.isfile(filename):
-        with open("Data_output.csv", "a") as f:
+        with open(filename, "a") as f:
             f.write(
                 database
                 + ","
@@ -540,12 +541,14 @@ def output_file(
             )
 
     else:
-        with open("Data_output.csv", "a") as f:
+        filename = os.path.join(path_interim, "Data_output.csv")
+        with open(filename, "a") as f:
             f.write(
                 "Database,File,Lane Number,Start Date, End Date, FFS, Total Counts, Breakdown Events, Alpha, Beta, Estimated Capacity\n"
             )
             f.close()
         output_file(
+            path_interim,
             database,
             date_time,
             FFS,
@@ -652,7 +655,6 @@ def show_figures(start):
     # plt.show()
 
 
-
 if __name__ == "__main__":
     path_to_site_summary = (
         r"C:\Users\abibeka\Kittelson & Associates, Inc\Burak Cesme -"
@@ -672,6 +674,7 @@ if __name__ == "__main__":
     path_to_out_files = (
         r"C:\Users\abibeka\Github\NCHRP 7-26\data\interim\pre_breakdown_data"
     )
+    path_interim = r"C:\Users\abibeka\Github\NCHRP 7-26\data\interim"
     site_df_fil = get_site_summary_stats(path_to_site_summary)
     files_dict = get_file_path_dict(path_to_kai_clean_data, path_to_uw_clean_data)
     ramp_files_dict = get_weave_ramp_file_dict(path_to_weave_ramp_data)
@@ -765,7 +768,8 @@ if __name__ == "__main__":
         avg_flowrate = avg_flowrate_fn(uncong_volume, flow_seq)
         # Step 5
         pre_breakdown_index, post_breakdown_index = pre_post_breakdown_index_fn(
-            breakdown_index, 0)
+            breakdown_index, 0
+        )
         (
             pre_breakdown_flowrate,
             pre_breakdown_speed,
@@ -804,6 +808,7 @@ if __name__ == "__main__":
         print("Estimated Capacity: " + str(estimated_capacity))
         # Step 7
         output_file(
+            path_interim,
             file,
             date_time,
             round(FFS, 0),
@@ -816,6 +821,6 @@ if __name__ == "__main__":
             0,
         )
 
-        #
+        #    path_interim,
 
     # show_figures(start)

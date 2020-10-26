@@ -30,14 +30,11 @@ def get_prebreakdown_data_ufl(path_prebreakdown_ufl_):
         temp_df = temp_df.rename(
             columns={col: inflection.underscore(col) for col in temp_df.columns}
         )
-        temp_df = (
-            temp_df
-            .rename(
-                columns={
-                    "mainline_vol": "prebreakdown_vol",
-                    "mainline_speed": "prebreakdown_speed",
-                }
-            )
+        temp_df = temp_df.rename(
+            columns={
+                "mainline_vol": "prebreakdown_vol",
+                "mainline_speed": "prebreakdown_speed",
+            }
         )
         list_prebreakdown_df.append(temp_df)
     return pd.concat(list_prebreakdown_df)
@@ -57,4 +54,3 @@ if __name__ == "__main__":
     prebreakdown_df_ufl_meta.to_csv(
         os.path.join(path_interim, "prebreakdown_ufl_merge_and_meta.csv"), index=False
     )
-

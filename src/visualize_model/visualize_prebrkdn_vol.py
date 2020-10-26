@@ -22,12 +22,16 @@ path_prebreakdown_merge_and_meta = os.path.join(
     path_interim, "prebreakdown_merge_and_meta.csv"
 )
 path_prebreakdown_df_all = os.path.join(path_interim, "prebreakdown_df_all_meta.csv")
-path_prebreakdown_df_ufl_meta = os.path.join(path_interim,
-                                             "prebreakdown_ufl_merge_and_meta.csv")
-path_prebreakdown_diverge_and_meta = os.path.join(path_interim,
-                                                "prebreakdown_diverge_and_meta.csv")
-path_prebreakdown_weave_and_meta = os.path.join(path_interim,
-                                                "prebreakdown_weave_and_meta.csv")
+path_prebreakdown_df_ufl_meta = os.path.join(
+    path_interim, "prebreakdown_ufl_merge_and_meta.csv"
+)
+path_prebreakdown_diverge_and_meta = os.path.join(
+    path_interim, "prebreakdown_diverge_and_meta.csv"
+)
+path_prebreakdown_weave_and_meta = os.path.join(
+    path_interim, "prebreakdown_weave_and_meta.csv"
+)
+
 
 def get_correct_sort_order_site_name(prebreakdown_df):
     site_no_name_dict_ = {
@@ -70,17 +74,12 @@ def plot_pair_plots(
         "ffs",
     ),
 ):
-    fig2 = px.scatter_matrix(data, dimensions=dimensions_, labels=labels_,color=color_)
+    fig2 = px.scatter_matrix(data, dimensions=dimensions_, labels=labels_, color=color_)
     fig2.write_html(os.path.join(folder_path, f"{outfile}.html"), auto_open=False)
 
 
 def save_cart(
-    data,
-    outfile,
-    folder_path,
-    x_vars,
-    y_var="prebreakdown_vol",
-    max_depth_=6,
+    data, outfile, folder_path, x_vars, y_var="prebreakdown_vol", max_depth_=6,
 ):
     lb = preprocessing.LabelBinarizer()
     data.ramp_metering = lb.fit_transform(data.ramp_metering)
@@ -166,7 +165,7 @@ if __name__ == "__main__":
         "hv",
         "number_of_mainline_lane_upstream",
         "number_of_on_ramp_lanes_at_ramp_terminal",
-        "ramp_metering"
+        "ramp_metering",
     )
     labels = {
         "prebreakdown_vol": "prebrkdn_vol",
@@ -186,7 +185,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions1,
-        color_="file_name"
+        color_="file_name",
     )
     plot_pair_plots(
         data=prebreakdown_df_merge_meta,
@@ -194,7 +193,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions2,
-        color_="file_name"
+        color_="file_name",
     )
 
     dimensions3 = (
@@ -205,7 +204,7 @@ if __name__ == "__main__":
         "breakdowns_by_tot",
         "ramp_vol",
         "ffs",
-        "ramp_metering"
+        "ramp_metering",
     )
     plot_pair_plots(
         data=prebreakdown_df_ufl_meta,
@@ -213,7 +212,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions3,
-        color_="file_name"
+        color_="file_name",
     )
     dimensions4 = (
         "prebreakdown_vol",
@@ -237,7 +236,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions4,
-        color_="file_name"
+        color_="file_name",
     )
     plot_pair_plots(
         data=prebreakdown_diverge_and_meta,
@@ -245,7 +244,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions5,
-        color_="file_name"
+        color_="file_name",
     )
 
     dimensions6 = (
@@ -270,7 +269,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions6,
-        color_="file_name"
+        color_="file_name",
     )
     plot_pair_plots(
         data=prebreakdown_weave_and_meta,
@@ -278,7 +277,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions7,
-        color_="file_name"
+        color_="file_name",
     )
 
     # fig=px.box(prebreakdown_weave_and_meta,
@@ -300,7 +299,7 @@ if __name__ == "__main__":
             "length_of_acceleration_lane",
             "prebreakdown_speed",
             "mainline_aadt_2018",
-            "ramp_vol"
+            "ramp_vol",
         ],
         max_depth_=3,
     )
