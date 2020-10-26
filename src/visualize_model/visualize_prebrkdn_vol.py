@@ -24,7 +24,10 @@ path_prebreakdown_merge_and_meta = os.path.join(
 path_prebreakdown_df_all = os.path.join(path_interim, "prebreakdown_df_all_meta.csv")
 path_prebreakdown_df_ufl_meta = os.path.join(path_interim,
                                              "prebreakdown_ufl_merge_and_meta.csv")
-
+path_prebreakdown_diverge_and_meta = os.path.join(path_interim,
+                                                "prebreakdown_diverge_and_meta.csv")
+path_prebreakdown_weave_and_meta = os.path.join(path_interim,
+                                                "prebreakdown_weave_and_meta.csv")
 
 def get_correct_sort_order_site_name(prebreakdown_df):
     site_no_name_dict_ = {
@@ -49,7 +52,7 @@ def plot_prebreakdown_box_plots(
         hoverlabel=dict(bgcolor="white", font_size=18, font_family="Rockwell"),
     )
     fig.update_layout()
-    fig.write_html(os.path.join(folder_path, f"{outfile}.html"))
+    fig.write_html(os.path.join(folder_path, f"{outfile}.html"), auto_open=False)
 
 
 def plot_pair_plots(
@@ -68,7 +71,7 @@ def plot_pair_plots(
 ):
     fig2 = px.scatter_matrix(data, dimensions=dimensions_, labels=labels_,)
     fig2.show()
-    fig2.write_html(os.path.join(folder_path, f"{outfile}.html"))
+    fig2.write_html(os.path.join(folder_path, f"{outfile}.html"), auto_open=False)
 
 
 def save_cart(
@@ -103,6 +106,9 @@ if __name__ == "__main__":
     prebreakdown_df_all = pd.read_csv(path_prebreakdown_df_all)
     prebreakdown_df_merge_meta = pd.read_csv(path_prebreakdown_merge_and_meta)
     prebreakdown_df_ufl_meta = pd.read_csv(path_prebreakdown_df_ufl_meta)
+    prebreakdown_diverge_and_meta = pd.read_csv(path_prebreakdown_diverge_and_meta)
+    prebreakdown_weave_and_meta = pd.read_csv(path_prebreakdown_weave_and_meta)
+
     # Plot box plots
     site_name_sorted_all = get_correct_sort_order_site_name(
         prebreakdown_df=prebreakdown_df_all
@@ -133,7 +139,7 @@ if __name__ == "__main__":
 
     plot_prebreakdown_box_plots(
         data=prebreakdown_df_merge_meta,
-        outfile="box_plots_simple_merge",
+        outfile="box_plots_simple_merge_ramp_metering",
         color_="ramp_metering",
         hover_data_=[
             "ffs",
@@ -212,6 +218,7 @@ if __name__ == "__main__":
         "breakdowns_by_tot",
         "ramp_vol",
         "ffs",
+        "ramp_metering"
     )
     plot_pair_plots(
         data=prebreakdown_df_ufl_meta,
@@ -237,4 +244,68 @@ if __name__ == "__main__":
             "ramp_vol"
         ],
         max_depth_=4,
+    )
+
+    dimensions4 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "length_of_deceleration_lane",
+        "mainline_aadt",
+        "breakdowns_by_tot",
+        "ffs",
+    )
+    dimensions5 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "mainline_grade",
+        "hv",
+        "number_of_mainline_lane_upstream",
+        "number_of_off_ramp_lane",
+    )
+    plot_pair_plots(
+        data=prebreakdown_diverge_and_meta,
+        outfile="pair_plot_simple_diverge_1",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions4,
+    )
+    plot_pair_plots(
+        data=prebreakdown_diverge_and_meta,
+        outfile="pair_plot_simple_diverge_2",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions5,
+    )
+
+
+
+    dimensions6 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "short_length_ls_ft",
+        "mainline_aadt",
+        "breakdowns_by_tot",
+        "ffs",
+    )
+    dimensions7 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "mainline_grade",
+        "hv",
+        "interchange_density",
+        "ramp_metering",
+    )
+    plot_pair_plots(
+        data=prebreakdown_weave_and_meta,
+        outfile="pair_plot_simple_weave_1",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions6,
+    )
+    plot_pair_plots(
+        data=prebreakdown_weave_and_meta,
+        outfile="pair_plot_simple_weave_2",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions7,
     )
