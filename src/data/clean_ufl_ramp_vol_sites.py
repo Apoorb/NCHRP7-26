@@ -1,12 +1,6 @@
 import os
 import pandas as pd
-import numpy as np
 import inflection
-import re
-from sklearn import tree
-from sklearn import preprocessing
-import graphviz
-import seaborn as sns
 from src.utils import get_project_root
 from src.data import clean_prebreakdown_data
 

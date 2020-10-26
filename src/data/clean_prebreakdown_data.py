@@ -138,8 +138,6 @@ def get_prebreakdown_data(path_prebreakdown_all_, clean_geometry_type_list_=[]):
 
 if __name__ == "__main__":
     site_sum_merge = read_site_data(path_=path_site_char, sheet_name_="Merge")
-    # site_sum_diverge = read_site_data(path_=path_site_char, sheet_name_="Diverge")
-    # site_sum_weave = read_site_data(path_=path_site_char, sheet_name_="Weaving")
     site_sum_merge_fil = clean_site_sum_merge(site_sum_merge, iloc_max_row=36)
     get_geometry_list(path_prebreakdown_all)
     clean_geometry_type_list = ["Simple merge", "Ramp metered"]
@@ -157,11 +155,14 @@ if __name__ == "__main__":
         .rename(columns={"file_name_x": "file_name"})
         .drop(columns="file_name_y")
     )
-
     prebreakdown_df_all.to_csv(
-        os.path.join(path_interim, "prebreakdown_merge_no_meta.csv"), index=False
+        os.path.join(path_interim, "prebreakdown_df_all_meta.csv"), index=False
     )
-
     prebreakdown_df_merge_meta.to_csv(
         os.path.join(path_interim, "prebreakdown_merge_and_meta.csv"), index=False
     )
+
+    site_sum_diverge = read_site_data(path_=path_site_char, sheet_name_="Diverge")
+    site_sum_diverge_fil = clean_site_sum_merge(site_sum_diverge, iloc_max_row=26)
+
+    # site_sum_weave = read_site_data(path_=path_site_char, sheet_name_="Weaving")

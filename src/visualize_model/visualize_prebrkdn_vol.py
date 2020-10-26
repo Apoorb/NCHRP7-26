@@ -1,14 +1,10 @@
 import os
 import pandas as pd
-import numpy as np
-import inflection
-import re
-import glob
+
 import plotly.express as px
 from sklearn import tree
 from sklearn import preprocessing
 import graphviz
-import seaborn as sns
 import plotly.io as pio
 from src.utils import get_project_root
 
@@ -25,7 +21,7 @@ if not os.path.exists(path_box_fig):
 path_prebreakdown_merge_and_meta = os.path.join(
     path_interim, "prebreakdown_merge_and_meta.csv"
 )
-path_prebreakdown_df_all = os.path.join(path_interim, "prebreakdown_merge_no_meta.csv")
+path_prebreakdown_df_all = os.path.join(path_interim, "prebreakdown_df_all_meta.csv")
 path_prebreakdown_df_ufl_meta = os.path.join(path_interim,
                                              "prebreakdown_ufl_merge_and_meta.csv")
 
@@ -157,6 +153,14 @@ if __name__ == "__main__":
         "breakdowns_by_tot",
         "ffs",
     )
+    dimensions2 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "mainline_grade",
+        "hv",
+        "number_of_mainline_lane_upstream",
+        "number_of_on_ramp_lanes_at_ramp_terminal",
+    )
     labels = {
         "prebreakdown_vol": "prebrkdn_vol",
         "prebreakdown_speed": "prebrkdn_spd",
@@ -164,15 +168,24 @@ if __name__ == "__main__":
         "mainline_aadt_2018": "aadt_2018",
         "breakdowns_by_tot": "brkdn/tot_cnt",
         "ffs": "ffs",
-        "ramp_vol": "ramp_vol"
+        "ramp_vol": "ramp_vol",
+        "number_of_on_ramp_lanes_at_ramp_terminal": "no_on_ramp_ln_terminal",
+        "number_of_mainline_lane_upstream": "mainline_ln",
     }
 
     plot_pair_plots(
         data=prebreakdown_df_merge_meta,
-        outfile="pair_plot_simple_merge",
+        outfile="pair_plot_simple_merge_1",
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions1,
+    )
+    plot_pair_plots(
+        data=prebreakdown_df_merge_meta,
+        outfile="pair_plot_simple_merge_2",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions2,
     )
     save_cart(
         data=prebreakdown_df_merge_meta,
@@ -191,9 +204,7 @@ if __name__ == "__main__":
         ],
         max_depth_=4,
     )
-
-
-    dimensions2 = (
+    dimensions3 = (
         "prebreakdown_vol",
         "prebreakdown_speed",
         "length_of_acceleration_lane",
@@ -207,9 +218,8 @@ if __name__ == "__main__":
         outfile="pair_plot_simple_merge_ufl",
         folder_path=path_figures,
         labels_=labels,
-        dimensions_=dimensions2,
+        dimensions_=dimensions3,
     )
-
     save_cart(
         data=prebreakdown_df_merge_meta,
         outfile="cart_prebreakdown_simple_merge_ufl",
