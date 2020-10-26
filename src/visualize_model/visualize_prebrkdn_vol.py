@@ -24,7 +24,10 @@ path_prebreakdown_merge_and_meta = os.path.join(
 path_prebreakdown_df_all = os.path.join(path_interim, "prebreakdown_df_all_meta.csv")
 path_prebreakdown_df_ufl_meta = os.path.join(path_interim,
                                              "prebreakdown_ufl_merge_and_meta.csv")
-
+path_prebreakdown_diverge_and_meta = os.path.join(path_interim,
+                                                "prebreakdown_diverge_and_meta.csv")
+path_prebreakdown_weave_and_meta = os.path.join(path_interim,
+                                                "prebreakdown_weave_and_meta.csv")
 
 def get_correct_sort_order_site_name(prebreakdown_df):
     site_no_name_dict_ = {
@@ -103,6 +106,9 @@ if __name__ == "__main__":
     prebreakdown_df_all = pd.read_csv(path_prebreakdown_df_all)
     prebreakdown_df_merge_meta = pd.read_csv(path_prebreakdown_merge_and_meta)
     prebreakdown_df_ufl_meta = pd.read_csv(path_prebreakdown_df_ufl_meta)
+    prebreakdown_diverge_and_meta = pd.read_csv(path_prebreakdown_diverge_and_meta)
+    prebreakdown_weave_and_meta = pd.read_csv(path_prebreakdown_weave_and_meta)
+
     # Plot box plots
     site_name_sorted_all = get_correct_sort_order_site_name(
         prebreakdown_df=prebreakdown_df_all
@@ -237,4 +243,68 @@ if __name__ == "__main__":
             "ramp_vol"
         ],
         max_depth_=4,
+    )
+
+    dimensions4 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "length_of_deceleration_lane",
+        "mainline_aadt",
+        "breakdowns_by_tot",
+        "ffs",
+    )
+    dimensions5 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "mainline_grade",
+        "hv",
+        "number_of_mainline_lane_upstream",
+        "number_of_off_ramp_lane",
+    )
+    plot_pair_plots(
+        data=prebreakdown_diverge_and_meta,
+        outfile="pair_plot_simple_diverge_1",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions4,
+    )
+    plot_pair_plots(
+        data=prebreakdown_diverge_and_meta,
+        outfile="pair_plot_simple_diverge_2",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions5,
+    )
+
+
+
+    dimensions6 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "length_of_deceleration_lane",
+        "mainline_aadt",
+        "breakdowns_by_tot",
+        "ffs",
+    )
+    dimensions7 = (
+        "prebreakdown_vol",
+        "prebreakdown_speed",
+        "mainline_grade",
+        "hv",
+        "number_of_mainline_lane_upstream",
+        "number_of_off_ramp_lane",
+    )
+    plot_pair_plots(
+        data=prebreakdown_weave_and_meta,
+        outfile="pair_plot_simple_weave_1",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions6,
+    )
+    plot_pair_plots(
+        data=prebreakdown_weave_and_meta,
+        outfile="pair_plot_simple_weave_2",
+        folder_path=path_figures,
+        labels_=labels,
+        dimensions_=dimensions7,
     )
