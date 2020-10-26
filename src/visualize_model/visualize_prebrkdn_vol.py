@@ -60,6 +60,7 @@ def plot_pair_plots(
     outfile,
     folder_path,
     labels_=None,
+    color_=None,
     dimensions_=(
         "prebreakdown_vol",
         "prebreakdown_speed",
@@ -69,8 +70,7 @@ def plot_pair_plots(
         "ffs",
     ),
 ):
-    fig2 = px.scatter_matrix(data, dimensions=dimensions_, labels=labels_,)
-    fig2.show()
+    fig2 = px.scatter_matrix(data, dimensions=dimensions_, labels=labels_,color=color_)
     fig2.write_html(os.path.join(folder_path, f"{outfile}.html"), auto_open=False)
 
 
@@ -166,6 +166,7 @@ if __name__ == "__main__":
         "hv",
         "number_of_mainline_lane_upstream",
         "number_of_on_ramp_lanes_at_ramp_terminal",
+        "ramp_metering"
     )
     labels = {
         "prebreakdown_vol": "prebrkdn_vol",
@@ -185,6 +186,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions1,
+        color_="file_name"
     )
     plot_pair_plots(
         data=prebreakdown_df_merge_meta,
@@ -192,24 +194,9 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions2,
+        color_="file_name"
     )
-    save_cart(
-        data=prebreakdown_df_merge_meta,
-        outfile="cart_prebreakdown_simple_merge",
-        folder_path=path_figures,
-        y_var="prebreakdown_vol",
-        x_vars=[
-            "ffs",
-            "breakdowns_by_tot",
-            "number_of_mainline_lane_upstream",
-            "number_of_on_ramp_lanes_at_ramp_terminal",
-            "ramp_metering",
-            "length_of_acceleration_lane",
-            "prebreakdown_speed",
-            "mainline_aadt_2018",
-        ],
-        max_depth_=4,
-    )
+
     dimensions3 = (
         "prebreakdown_vol",
         "prebreakdown_speed",
@@ -226,26 +213,8 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions3,
+        color_="file_name"
     )
-    save_cart(
-        data=prebreakdown_df_merge_meta,
-        outfile="cart_prebreakdown_simple_merge_ufl",
-        folder_path=path_figures,
-        y_var="prebreakdown_vol",
-        x_vars=[
-            "ffs",
-            "breakdowns_by_tot",
-            "number_of_mainline_lane_upstream",
-            "number_of_on_ramp_lanes_at_ramp_terminal",
-            "ramp_metering",
-            "length_of_acceleration_lane",
-            "prebreakdown_speed",
-            "mainline_aadt_2018",
-            "ramp_vol"
-        ],
-        max_depth_=4,
-    )
-
     dimensions4 = (
         "prebreakdown_vol",
         "prebreakdown_speed",
@@ -268,6 +237,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions4,
+        color_="file_name"
     )
     plot_pair_plots(
         data=prebreakdown_diverge_and_meta,
@@ -275,9 +245,8 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions5,
+        color_="file_name"
     )
-
-
 
     dimensions6 = (
         "prebreakdown_vol",
@@ -301,6 +270,7 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions6,
+        color_="file_name"
     )
     plot_pair_plots(
         data=prebreakdown_weave_and_meta,
@@ -308,4 +278,46 @@ if __name__ == "__main__":
         folder_path=path_figures,
         labels_=labels,
         dimensions_=dimensions7,
+        color_="file_name"
+    )
+
+    # fig=px.box(prebreakdown_weave_and_meta,
+    #        x="short_length_ls_ft",
+    #        y="prebreakdown_vol")
+    # fig.show()
+
+    save_cart(
+        data=prebreakdown_df_ufl_meta,
+        outfile="cart_prebreakdown_simple_merge_ufl",
+        folder_path=path_figures,
+        y_var="prebreakdown_vol",
+        x_vars=[
+            "ffs",
+            "breakdowns_by_tot",
+            "number_of_mainline_lane_upstream",
+            "number_of_on_ramp_lanes_at_ramp_terminal",
+            "ramp_metering",
+            "length_of_acceleration_lane",
+            "prebreakdown_speed",
+            "mainline_aadt_2018",
+            "ramp_vol"
+        ],
+        max_depth_=3,
+    )
+    save_cart(
+        data=prebreakdown_df_merge_meta,
+        outfile="cart_prebreakdown_simple_merge",
+        folder_path=path_figures,
+        y_var="prebreakdown_vol",
+        x_vars=[
+            "ffs",
+            "breakdowns_by_tot",
+            "number_of_mainline_lane_upstream",
+            "number_of_on_ramp_lanes_at_ramp_terminal",
+            "ramp_metering",
+            "length_of_acceleration_lane",
+            "prebreakdown_speed",
+            "mainline_aadt_2018",
+        ],
+        max_depth_=3,
     )
