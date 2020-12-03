@@ -82,34 +82,7 @@ def read_ramp_data(file_path, time, is_flow_volume):
                 str(measurement_duration[i]), "%Y-%m-%d %H:%M:%S"
             )
         )
-
     return volumes, measurement_duration
-
-    root = tk.Tk()
-    root.withdraw()
-    print("Choose the Ramp file....")
-    file_path = filedialog.askopenfilename()
-    # print(file_path)
-    no_of_lanes = str(file_path).split("_0_")[1].split(".xls")[0]
-    # print(no_of_lanes)
-    df = pd.read_excel(file_path)
-
-    if no_of_lanes == "1":
-        l1 = df["L1Volume"].tolist()
-        time = df["tini"].tolist()
-        # print(time[0].day)
-    elif no_of_lanes == "2":
-        l1 = (df["L1Volume"] + df["L2Volume"]).tolist()
-        time = df["tini"].tolist()
-
-    elif no_of_lanes == "3":
-        l1 = (df["L1Volume"] + df["L2Volume"] + df["L3Volume"]).tolist()
-        time = df["tini"].tolist()
-    else:
-        l1 = []
-        time = []
-
-    return (l1, time)
 
 
 def approach_sped_volume_ramp(
@@ -594,16 +567,21 @@ def plot_figure_1(
         marker="x",
         s=12,
     )
-    # ax1.scatter([pre_breakdown_flowrate], [pre_breakdown_speed], label="PreBreakdown_speed vs PreBreakdown_volume",color="blue")
-    # ax2.plot(flow_seq, cumm_pre_breakdown_distr, label='Observed Pre-Breakdown Probability Distr.', color='blue')
-    # ax2.scatter([flow_seq], [cumm_pre_breakdown_distr], color='blue')
-    # plt.title('FFS: %d MPH , Breakdowns: %d, Samples: %d, Alpha: %d, Beta: %s,  Estimated Capacity: %d' % (FFS,sum(pre_breakdown_counts), len(volume),alpha,str(beta),estimated_capacity), fontsize=12)
+    plt.title(
+        "FFS: %d MPH , Breakdowns: %d, Samples: %d, Alpha: %d, Beta: %s,  Estimated Capacity: %d"
+        % (
+            FFS,
+            sum(pre_breakdown_counts),
+            len(volume),
+            alpha,
+            str(beta),
+            estimated_capacity,
+        ),
+        fontsize=12,
+    )
     plt.legend(loc="best", fontsize=10)
-    # ax2.legend(loc="upper right", fontsize=10)
     plt.xlabel("Flow Rate (veh/hr/ln)", fontsize=12)
     plt.ylabel("Speed (mph)", fontsize=12)
-    # ax2.set_ylabel("Probability of Breakdown", fontsize=12)
-    # plt.xlim([0,max(uncong_volume)+200])
     figure = plt.gcf()  # get current figure
     figure.set_size_inches(5.5, 3)
     plt.savefig(str(file_name) + "_" + str(lane) + "_time_1.png", bbox_inches="tight")
@@ -632,14 +610,22 @@ def plot_figure_2(
         color="red",
         linestyle="--",
     )
-    # plt.scatter([flow_seq], [cumm_pre_breakdown_distr], color='red')
     plt.plot(
         weibull_x, weibull_vals, label="Fitted Weibull CDF", color="cornflowerblue"
     )
-    # plt.scatter([flow_seq], [weibull_vals], label='Weibull CDF', color='cornflowerblue')
-    # ax1.plot(flow_seq, breakdown_probability, label='Probability of Breakdown', color='green')
-    # ax1.scatter([flow_seq], [breakdown_probability], color='green')
-    # plt.title('FFS: %d MPH , Lane: %d, Breakdowns: %d, Samples: %d, Alpha: %d, Beta: %s,  Estimated Capacity: %d' % (FFS, lane, sum(pre_breakdown_counts), len(volume),alpha,str(beta),estimated_capacity), fontsize=12)
+    plt.title(
+        "FFS: %d MPH , Lane: %d, Breakdowns: %d, Samples: %d, Alpha: %d, Beta: %s,  Estimated Capacity: %d"
+        % (
+            FFS,
+            lane,
+            sum(pre_breakdown_counts),
+            len(volume),
+            alpha,
+            str(beta),
+            estimated_capacity,
+        ),
+        fontsize=12,
+    )
     plt.legend(loc="best", fontsize=10)
     plt.xlabel("Flow Rate (veh/hr/ln)", fontsize=12)
     plt.ylabel("Probability of Breakdown", fontsize=12)
@@ -692,7 +678,7 @@ if __name__ == "__main__":
         ran_files_no = []
     else:
         ran_files_no = [file.split("_")[0] for file in os.listdir(path_to_out_files)]
-
+    ran_files_no.remove("7")
     for file, path in files_dict.items():
         print(file)
         file_sno = file.split("_")[0]
@@ -807,20 +793,33 @@ if __name__ == "__main__":
         estimated_capacity = estimated_capacity_fn(alpha, beta)
         print("Estimated Capacity: " + str(estimated_capacity))
         # Step 7
-        output_file(
-            path_interim,
-            file,
-            date_time,
-            round(FFS, 0),
-            volume,
-            pre_breakdown_counts,
-            estimated_capacity,
-            file_path,
-            round(alpha, 0),
-            round(beta, 1),
-            0,
-        )
+        # output_file(
+        #     path_interim,
+        #     file,
+        #     date_time,
+        #     round(FFS, 0),
+        #     volume,
+        #     pre_breakdown_counts,
+        #     estimated_capacity,
+        #     file_path,
+        #     round(alpha, 0),
+        #     round(beta, 1),
+        #     0,
+        # )
 
+        plot_figure_1(
+            FFS,
+            pre_breakdown_counts,
+            volume,
+            speed,
+            pre_breakdown_speed,
+            pre_breakdown_flowrate,
+            estimated_capacity,
+            file,
+            lanes,
+            alpha,
+            beta,
+        )
         #    path_interim,
 
-    # show_figures(start)
+    show_figures(start)
