@@ -27,7 +27,7 @@ path_prebreakdown_df_merge_and_meta = os.path.join(
 # path_prebreakdown_df_ufl_meta = os.path.join(
 #     path_interim, "prebreakdown_ufl_merge_and_meta.csv"
 # )
-path_prebreakdown_diverge_and_meta = os.path.join(path_interim, "cap_diverge_df.csv")
+path_prebreakdown_diverge_and_meta = os.path.join(path_interim, "cap_weave_df.csv")
 path_prebreakdown_weave_and_meta = os.path.join(path_interim, "cap_weave_df.csv")
 
 
