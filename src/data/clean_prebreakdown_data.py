@@ -376,7 +376,7 @@ if __name__ == "__main__":
 
     site_sum_merge_fil = site_sum_merge_fil.merge(cap_df_mod, on="file_no", how="left")
     site_sum_merge_fil.to_csv(
-        os.path.join(path_interim, "all_merge_meta.csv"), index=False
+        os.path.join(path_interim, "cap_merge_meta.csv"), index=False
     )
     get_geometry_list(path_prebreakdown_all)
     clean_geometry_type_list = ["Simple merge", "Ramp metered"]
@@ -400,12 +400,9 @@ if __name__ == "__main__":
         .drop(columns="file_name_y")
     )
     prebreakdown_df_merge_all_meta.to_csv(
-        os.path.join(path_interim, "prebreakdown_df_all_merge_meta.csv"), index=False
+        os.path.join(path_interim, "prebkdn_uncongested_merge_meta.csv"), index=False
     )
-    prebreakdown_df_simple_merge_meta.to_csv(
-        os.path.join(path_interim, "prebreakdown_simple_merge_and_meta.csv"),
-        index=False,
-    )
+
 
     site_sum_diverge = read_site_data(
         path_=path_site_char, sheet_name_="Diverge", nrows_=42, usecols_=range(0, 61)
@@ -421,10 +418,10 @@ if __name__ == "__main__":
     site_sum_weave_fil = clean_site_sum_weave(site_sum_weave, iloc_max_row=26)
     site_sum_weave_fil = site_sum_weave_fil.merge(cap_df_mod, on="file_no", how="left")
     site_sum_diverge_fil.to_csv(
-        os.path.join(path_interim, "all_diverge_meta.csv"), index=False
+        os.path.join(path_interim, "cap_diverge_meta.csv"), index=False
     )
     site_sum_weave_fil.to_csv(
-        os.path.join(path_interim, "all_weave_meta.csv"), index=False
+        os.path.join(path_interim, "cap_weave_meta.csv"), index=False
     )
     prebreakdown_df_diverge_meta = (
         prebreakdown_df_all.merge(site_sum_diverge_fil, on="file_no", how="right")
@@ -439,8 +436,8 @@ if __name__ == "__main__":
     )
     len(prebreakdown_df_weave_meta.file_name.unique())
     prebreakdown_df_diverge_meta.to_csv(
-        os.path.join(path_interim, "cap_diverge_df.csv"), index=False
+        os.path.join(path_interim, "prebkdn_uncongested__diverge_and_meta.csv"), index=False
     )
     prebreakdown_df_weave_meta.to_csv(
-        os.path.join(path_interim, "cap_weave_df.csv"), index=False
+        os.path.join(path_interim, "prebkdn_uncongested_weave_and_meta.csv"), index=False
     )
