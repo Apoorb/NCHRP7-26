@@ -339,7 +339,20 @@ def get_prebreakdown_data(path_prebreakdown_all_, clean_geometry_type_list_=[]):
             )
         )
     prebreakdown_df_ = pd.concat(prebreakdown_df_list)
-    return prebreakdown_df_
+    prebreakdown_df_sorted_no_duplicates = (
+        prebreakdown_df_.sort_values(["file_no", "Time", "failure"])
+        .groupby(["file_no", "Time"])
+        .agg(
+            file_name=("file_name", "max"),
+            failure=("failure", "max"),
+            mainline_speed=("mainline_speed", "max"),
+            mainline_vol=("mainline_vol", "max"),
+            geometry_type=("geometry_type", "max"),
+        )
+        .reset_index()
+    )
+
+    return prebreakdown_df_sorted_no_duplicates
 
 
 if __name__ == "__main__":
