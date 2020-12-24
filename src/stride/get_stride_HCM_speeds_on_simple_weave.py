@@ -309,8 +309,8 @@ rmse_hcm_speed = math.sqrt(
         vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.s_weave_hcm,
     )
 )
-rmse_stride_speed = np.round(rmse_stride_speed)
-rmse_hcm_speed = np.round(rmse_hcm_speed)
+rmse_stride_speed = np.round(rmse_stride_speed, 2)
+rmse_hcm_speed = np.round(rmse_hcm_speed, 2)
 print(f"Root mean squared error for STRIDE method = {rmse_stride_speed}")
 print(f"Root mean squared error for HCM method = {rmse_hcm_speed}")
 
@@ -353,9 +353,11 @@ np.set_printoptions(suppress=True)  # Don't show scientific numbers.
 initial_guess = [0.025, 17.302, 0.344, 3, 0.369]
 popt, pcov = curve_fit(curve_fit_stride, X, Y, maxfev=2000)
 alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal = popt
-Error = curve_fit_stride(X, alpha, beta, gamma, epsilon, delta)
+Error = curve_fit_stride(
+    X, alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal)
 # RMSE
 rmse_calibrated_stride = np.round(sum((Error ** 2) / len(Error)) ** 0.5, 2)
+print(f"Root mean squared error for Calibrated STRIDE method = {rmse_calibrated_stride}")
 
 vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.loc[
     :, "S_not_stride_with_unconstrained_calibrated_parameters"
@@ -377,19 +379,19 @@ fig = make_subplots(
     rows=3,
     cols=1,
     shared_xaxes=True,
-    vertical_spacing=0.08,
+    vertical_spacing=0.04,
     subplot_titles=(
         f"fHCM Estimated Speed (RMSE={rmse_hcm_speed})",
-        f"STRIDE Estimated Speed (RMSE={rmse_stride_speed})"
+        f"STRIDE Estimated Speed (RMSE={rmse_stride_speed}) "
         f"alpha={np.round(alpha,2)}, "
         f"beta={np.round(beta,2)}, gamma="
-        f"{np.round(gamma,2)},"
+        f"{np.round(gamma,2)}, "
         f"epsilon={np.round(epsilon,2)}, delta="
         f"{np.round(delta,2)}",
         f"STRIDE Estimated Speed (RMSE={rmse_calibrated_stride}) with "
         f"alpha={np.round(alpha_optimal,2)}, "
         f"beta={np.round(beta_optimal,2)}, gamma="
-        f"{np.round(gamma_optimal,2)},"
+        f"{np.round(gamma_optimal,2)}, "
         f"epsilon={np.round(epsilon,2)}, delta="
         f"{np.round(delta_optimal,2)}",
     ),
@@ -432,8 +434,8 @@ plot_hcm = px.scatter(
 # Add a 45 degree line to the data.
 plot_hcm.add_trace(
     go.Scatter(
-        x=[20, 80],
-        y=[20, 80],
+        x=[20, 85],
+        y=[20, 85],
         mode="lines",
         line=go.scatter.Line(color="gray"),
         showlegend=False,
@@ -455,8 +457,8 @@ plot_stride = px.scatter(
 )
 plot_stride.add_trace(
     go.Scatter(
-        x=[20, 80],
-        y=[20, 80],
+        x=[20, 85],
+        y=[20, 85],
         mode="lines",
         line=go.scatter.Line(color="gray"),
         showlegend=False,
@@ -477,8 +479,8 @@ plot_stride_calibrated = px.scatter(
 )
 plot_stride_calibrated.add_trace(
     go.Scatter(
-        x=[20, 80],
-        y=[20, 80],
+        x=[20, 85],
+        y=[20, 85],
         mode="lines",
         line=go.scatter.Line(color="gray"),
         showlegend=False,
@@ -499,30 +501,31 @@ for dat1, dat2, dat3 in zip(
 
 # Make figures pretty.
 fig.update_xaxes(
-    title_text="Observed Speed (mph)", range=[20, 80], fixedrange=True, row=3, col=1
+    title_text="Observed Speed (mph)", range=[20, 85], fixedrange=True, row=3, col=1
 )
 fig.update_yaxes(
     title_text="HCM Estimated Speed (mph)",
-    range=[20, 80],
+    range=[20, 85],
     fixedrange=True,
     row=1,
     col=1,
 )
 fig.update_yaxes(
     title_text="STRIDE Estimated Speed (mph)",
-    range=[20, 80],
+    range=[20, 85],
     fixedrange=True,
     row=2,
     col=1,
 )
 fig.update_yaxes(
     title_text="STRIDE Calibrated Parameters Estimated Speed (mph)",
-    range=[20, 80],
+    range=[20, 85],
     fixedrange=True,
     row=3,
     col=1,
 )
-fig.update_layout(autosize=True, height=1400, width=900, margin=dict(l=200))
+fig.update_layout(autosize=True, height=1400, width=900,
+                  margin=dict(l=200, t=20))
 plot(
     fig,
     filename=os.path.join(path_figures_v1, "HCM_vs_STRIDE_vs_Obs_speed.html",),
