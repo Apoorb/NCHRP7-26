@@ -1,3 +1,21 @@
+"""
+Copy of Azy's script for generating csv files for pre-breakdown and uncongested volumes.
+Some of the things in this script are hard coded; for instance the FFS fixed parameter
+is read from NCHRP07-26_Site_summary_shared.xlsx.
+
+**Always check with Azy (if possible) before using this script!**
+
+He might have made some changes to his version of this script that would give different
+output.
+
+**If possible let Azy generate the ouput of this script.**
+
+The outputs of this script are the following two file with following columns:
+    1_Simple Merge_1_pre_brkdn.csv: Time, MainlineSpeed, MainlineVol
+        This file has the pre-breakdown data.
+    1_Simple Merge_1_uncongested.csv: Time, MainlineSpeed, MainlineVol
+        This file has the uncongested data (which includes the pre-breakdown data).
+"""
 import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
@@ -613,24 +631,29 @@ def show_figures(start):
 
 
 if __name__ == "__main__":
+    # This file is used to figure out if FFS is fixed. If so, it also tells what FFS to
+    #use.
     path_to_site_summary = (
         r"C:\Users\abibeka\Kittelson & Associates, Inc\Burak Cesme - NCHRP 07-26"
         r"\Task 6 - Execute Phase II Plan\Site Analysis & Metadata"
         r"\NCHRP07-26_Site_summary_shared.xlsx"
     )
+    # Location to the KAI raw data.
     path_to_kai_clean_data = (
         r"C:\Users\abibeka\Kittelson & Associates, Inc\Burak Cesme - NCHRP 07-26"
         r"\Task 6 - Execute Phase II Plan\site_summary_template\05_organized_KAI_Data"
     )
+    # Location to the UW raw data.
     path_to_uw_clean_data = (
         r"C:\Users\abibeka\Kittelson & Associates, Inc\Burak Cesme - NCHRP 07-26"
         r"\Task 6 - Execute Phase II Plan\site_summary_template\04_organized_UW_Data"
     )
+    # Location to the ramp data for weaves with no detector in the weaving section.
     path_to_weave_ramp_data = os.path.join(path_to_kai_clean_data, "weave_ramp_volumes")
     path_to_out_files = (
         r"C:\Users\abibeka\Github\NCHRP 7-26\data\interim\pre_breakdown_data"
     )
-
+    # Read files
     site_df_fil = get_site_summary_stats(path_to_site_summary)
     files_dict = get_file_path_dict(path_to_kai_clean_data, path_to_uw_clean_data)
     ramp_files_dict = get_weave_ramp_file_dict(path_to_weave_ramp_data)

@@ -1,3 +1,8 @@
+"""
+Script to combine all the uncongested and pre-breakdown data by merge, diverge, and weave
+sites. Also add FFS from Azy's Data_output-Final.csv file and add metadata from the
+NCHRP 07-26_Master_Database_shared.xlsx file.
+"""
 import os
 import pandas as pd
 import numpy as np
