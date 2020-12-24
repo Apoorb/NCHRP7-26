@@ -425,15 +425,15 @@ plot_hcm = px.scatter(
     ],
 )
 # Add a 45 degree line to the data.
-# plot_hcm.add_trace(
-#     go.Scatter(
-#         x=[20, 80],
-#         y=[20, 80],
-#         mode="lines",
-#         line=go.scatter.Line(color="gray"),
-#         showlegend=False
-#     )
-# )
+plot_hcm.add_trace(
+    go.Scatter(
+        x=[20, 80],
+        y=[20, 80],
+        mode="lines",
+        line=go.scatter.Line(color="gray"),
+        showlegend=False
+    )
+)
 plot_hcm_45_degree_line = plot_hcm
 # Plotly plots have two components: data and layout. Extract the data.
 data_plot_hcm = plot_hcm_45_degree_line["data"]
@@ -470,15 +470,15 @@ plot_stride = px.scatter(
         "s_weave_hcm",
     ],
 )
-# plot_stride.add_trace(
-#     go.Scatter(
-#         x=[20, 80],
-#         y=[20, 80],
-#         mode="lines",
-#         line=go.scatter.Line(color="gray"),
-#         showlegend=False
-#     )
-# )
+plot_stride.add_trace(
+    go.Scatter(
+        x=[20, 80],
+        y=[20, 80],
+        mode="lines",
+        line=go.scatter.Line(color="gray"),
+        showlegend=False
+    )
+)
 plot_stride_45_degree_line = plot_stride
 data_plot_stride = plot_stride_45_degree_line["data"]
 # Repeat above on STRIDE data with calibrated parameter. Again, this is the lazy
@@ -514,15 +514,15 @@ plot_stride_calibrated = px.scatter(
         "s_weave_hcm",
     ],
 )
-# plot_stride_calibrated.add_trace(
-#     go.Scatter(
-#         x=[20, 80],
-#         y=[20, 80],
-#         mode="lines",
-#         line=go.scatter.Line(color="gray"),
-#         showlegend=False
-#     )
-# )
+plot_stride_calibrated.add_trace(
+    go.Scatter(
+        x=[20, 80],
+        y=[20, 80],
+        mode="lines",
+        line=go.scatter.Line(color="gray"),
+        showlegend=False
+    )
+)
 plot_stride_calibrated_45_degree_line = plot_stride_calibrated
 data_plot_stride_calibrated = plot_stride_calibrated_45_degree_line["data"]
 
