@@ -27,22 +27,35 @@ path_cap_weave_and_meta = os.path.join(path_interim, "all_weave_meta.csv")
 
 def plot_scatter(data, x_, y_, title_addon, facet_, color_, save_dir, height_, width_):
     fig1 = px.scatter(
-        data, x=x_, y=y_, facet_col=facet_, color=color_, trendline="ols",
+        data,
+        x=x_,
+        y=y_,
+        facet_col=facet_,
+        color=color_,
+        trendline="ols",
         title=f"{x_}_{y_}_{title_addon}_{facet_}",
     )
     fig1.update_layout(uniformtext_minsize=14, uniformtext_mode="hide")
     fig1.write_html(
-        os.path.join(save_dir, f"{x_}_{y_}_{title_addon}_{facet_}.html"), auto_open=False,
+        os.path.join(save_dir, f"{x_}_{y_}_{title_addon}_{facet_}.html"),
+        auto_open=False,
     )
 
 
 def plot_box(data, x_, y_, title_addon, facet_, color_, save_dir, height_, width_):
-    fig1 = px.box(data, x=x_, y=y_, facet_col=facet_, color=color_,
-                  title=f"{x_}_{y_}_{title_addon}_{facet_}")
+    fig1 = px.box(
+        data,
+        x=x_,
+        y=y_,
+        facet_col=facet_,
+        color=color_,
+        title=f"{x_}_{y_}_{title_addon}_{facet_}",
+    )
     fig1.update_traces(boxmean=True)
     fig1.update_layout(font_size=16, height=height_, width=width_)
     fig1.write_html(
-        os.path.join(save_dir, f"{x_}_{y_}_{title_addon}_{facet_}.html"), auto_open=False,
+        os.path.join(save_dir, f"{x_}_{y_}_{title_addon}_{facet_}.html"),
+        auto_open=False,
     )
 
 
@@ -54,9 +67,7 @@ if __name__ == "__main__":
             1
         ].str.capitalize()
     )
-    cap_weave_df_fil = cap_weave_df.loc[
-        lambda df: (df.estimated_capacity <= 3000)
-    ]
+    cap_weave_df_fil = cap_weave_df.loc[lambda df: (df.estimated_capacity <= 3000)]
 
     cont_vars = [
         "short_length_ls_ft",
@@ -77,7 +88,7 @@ if __name__ == "__main__":
         "n_wl",
         "lcrf",
         "lcfr",
-        "lcrr"
+        "lcrr",
     ]
     nominal_vars = [
         "area_type",
@@ -316,4 +327,3 @@ if __name__ == "__main__":
         height_=800,
         width_=1200,
     )
-

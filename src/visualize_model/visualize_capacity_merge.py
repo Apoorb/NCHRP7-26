@@ -253,8 +253,6 @@ if __name__ == "__main__":
         width_=1200,
     )
 
-
-
     plot_scatter(
         data=cap_merge_df_fil_len_acc_1500,
         x_="mainline_speed_limit",
