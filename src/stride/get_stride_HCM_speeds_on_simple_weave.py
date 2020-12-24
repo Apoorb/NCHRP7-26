@@ -10,6 +10,7 @@ from plotly.offline import plot
 import plotly.graph_objects as go
 from sklearn.metrics import mean_squared_error
 import math
+
 pio.renderers.default = "browser"
 
 # Set paths:
@@ -235,63 +236,60 @@ test_stride_speed_calc = vol_weave_df_simple_fil_stride_hcm_extra_cols.drop_dupl
 )
 
 # Get HCM Observed Speed for Weaving Sections
-vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps = (
-    vol_weave_df_simple_fil_stride_hcm_extra_cols
-    .assign(
-        lc_min=lambda df: (df.lcfr * df.Vfr) + (df.lcrf * df.Vrf),
-        vr=lambda df: (df.Vfr + df.Vrf)
-        / (df.mainline_vol_pcu * df.num_of_mainline_lane_weaving_section),
-        l_max=lambda df: (5728 * (1 + df.vr) ** 1.6 - (1566 * df.n_wl)),
-        does_hcm_says_use_merge_diverge=lambda df: df.short_length_ls_ft > df.l_max,
-        c_iwl=lambda df: df.c_hcm_basic_seg
-        - (438.2 * (1 + df.vr) ** 1.6)
-        + (0.0765 * df.short_length_ls_ft)
-        + (119.8 * df.n_wl),
-        c_iw=lambda df: np.select(
-            [df.n_wl == 2, df.n_wl == 3],
-            [2400 / df.vr, 3500 / df.vr],
-            np.nan,  # n_wl should be 2 or 3 for this equation to work.
-        ),
-        c_iw_per_ln=lambda df: df.c_iw / df.num_of_mainline_lane_weaving_section,
-        c_hcm_weave=lambda df: df[["c_iwl", "c_iw_per_ln"]].min(axis=1),
-        v_by_c=lambda df: df.mainline_vol_pcu / df.c_hcm_weave,
-        is_v_by_c_over_1=lambda df: df.v_by_c > 1,
-        v_nw=lambda df: (df.mainline_vol_pcu * df.num_of_mainline_lane_weaving_section)
-        - (df.Vfr + df.Vrf),
-        lc_w=lambda df: df.lc_min
-        + 0.39
-        * (df.short_length_ls_ft - 300) ** 0.5
-        * df.num_of_mainline_lane_weaving_section ** 2
-        * (1 + df.interchange_density) ** 0.8,
-        i_nw=lambda df: df.short_length_ls_ft * df.interchange_density * df.v_nw / 10000,
-        lc_nw1=lambda df: (0.206 * df.v_nw)
-        + (0.542 * df.short_length_ls_ft)
-        - (192.6 * df.num_of_mainline_lane_weaving_section),
-        lc_nw2=lambda df: 2135 + 0.223 * (df.v_nw - 2000),
-        lc_nw3=lambda df: df.lc_nw1 + (df.lc_nw2 - df.lc_nw1) * (df.i_nw - 1300) / 650,
-        lc_nw=lambda df: np.select(
-            [
-                df.lc_nw1 >= df.lc_nw2,
-                df.i_nw <= 1300,
-                df.i_nw >= 1950,
-                (df.i_nw > 1300) & (df.i_nw < 1950),
-            ],
-            [df.lc_nw2, df.lc_nw1, df.lc_nw2, df.lc_nw3],
-            np.nan,
-        ),
-        lc_all=lambda df: df.lc_w + df.lc_nw,
-        s_min=15,
-        s_max=lambda df: df.FFS_lilian,
-        w=lambda df: 0.226 * (df.lc_all / df.short_length_ls_ft) ** 0.789,
-        s_w=lambda df: df.s_min + (df.s_max - df.s_min) / (1 + df.w),
-        s_nw=lambda df: df.FFS_lilian
-        - (0.0072 * df.lc_min)
-        - (0.0048 * df.mainline_vol_pcu),
-        v_w=lambda df: (df.Vfr + df.Vrf),
-        s_weave_hcm=lambda df: (df.v_w + df.v_nw)
-        / ((df.v_w / df.s_w) + (df.v_nw / df.s_nw)),
-        d_weave_hcm=lambda df: df.mainline_vol_pcu / df.s_weave_hcm,
-    )
+vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps = vol_weave_df_simple_fil_stride_hcm_extra_cols.assign(
+    lc_min=lambda df: (df.lcfr * df.Vfr) + (df.lcrf * df.Vrf),
+    vr=lambda df: (df.Vfr + df.Vrf)
+    / (df.mainline_vol_pcu * df.num_of_mainline_lane_weaving_section),
+    l_max=lambda df: (5728 * (1 + df.vr) ** 1.6 - (1566 * df.n_wl)),
+    does_hcm_says_use_merge_diverge=lambda df: df.short_length_ls_ft > df.l_max,
+    c_iwl=lambda df: df.c_hcm_basic_seg
+    - (438.2 * (1 + df.vr) ** 1.6)
+    + (0.0765 * df.short_length_ls_ft)
+    + (119.8 * df.n_wl),
+    c_iw=lambda df: np.select(
+        [df.n_wl == 2, df.n_wl == 3],
+        [2400 / df.vr, 3500 / df.vr],
+        np.nan,  # n_wl should be 2 or 3 for this equation to work.
+    ),
+    c_iw_per_ln=lambda df: df.c_iw / df.num_of_mainline_lane_weaving_section,
+    c_hcm_weave=lambda df: df[["c_iwl", "c_iw_per_ln"]].min(axis=1),
+    v_by_c=lambda df: df.mainline_vol_pcu / df.c_hcm_weave,
+    is_v_by_c_over_1=lambda df: df.v_by_c > 1,
+    v_nw=lambda df: (df.mainline_vol_pcu * df.num_of_mainline_lane_weaving_section)
+    - (df.Vfr + df.Vrf),
+    lc_w=lambda df: df.lc_min
+    + 0.39
+    * (df.short_length_ls_ft - 300) ** 0.5
+    * df.num_of_mainline_lane_weaving_section ** 2
+    * (1 + df.interchange_density) ** 0.8,
+    i_nw=lambda df: df.short_length_ls_ft * df.interchange_density * df.v_nw / 10000,
+    lc_nw1=lambda df: (0.206 * df.v_nw)
+    + (0.542 * df.short_length_ls_ft)
+    - (192.6 * df.num_of_mainline_lane_weaving_section),
+    lc_nw2=lambda df: 2135 + 0.223 * (df.v_nw - 2000),
+    lc_nw3=lambda df: df.lc_nw1 + (df.lc_nw2 - df.lc_nw1) * (df.i_nw - 1300) / 650,
+    lc_nw=lambda df: np.select(
+        [
+            df.lc_nw1 >= df.lc_nw2,
+            df.i_nw <= 1300,
+            df.i_nw >= 1950,
+            (df.i_nw > 1300) & (df.i_nw < 1950),
+        ],
+        [df.lc_nw2, df.lc_nw1, df.lc_nw2, df.lc_nw3],
+        np.nan,
+    ),
+    lc_all=lambda df: df.lc_w + df.lc_nw,
+    s_min=15,
+    s_max=lambda df: df.FFS_lilian,
+    w=lambda df: 0.226 * (df.lc_all / df.short_length_ls_ft) ** 0.789,
+    s_w=lambda df: df.s_min + (df.s_max - df.s_min) / (1 + df.w),
+    s_nw=lambda df: df.FFS_lilian
+    - (0.0072 * df.lc_min)
+    - (0.0048 * df.mainline_vol_pcu),
+    v_w=lambda df: (df.Vfr + df.Vrf),
+    s_weave_hcm=lambda df: (df.v_w + df.v_nw)
+    / ((df.v_w / df.s_w) + (df.v_nw / df.s_nw)),
+    d_weave_hcm=lambda df: df.mainline_vol_pcu / df.s_weave_hcm,
 )
 test_hcm_speed_calc = vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.drop_duplicates(
     "file_name"
@@ -301,14 +299,14 @@ test_hcm_speed_calc = vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.dr
 rmse_stride_speed = math.sqrt(
     mean_squared_error(
         vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.mainline_speed,
-        vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.S_not_stride
+        vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.S_not_stride,
     )
 )
 
 rmse_hcm_speed = math.sqrt(
     mean_squared_error(
         vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.mainline_speed,
-        vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.s_weave_hcm
+        vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.s_weave_hcm,
     )
 )
 print(f"Root mean squared error for STRIDE method = {rmse_stride_speed}")
@@ -349,13 +347,13 @@ def curve_fit_stride(X, alpha, beta, gamma, epsilon, delta):
 
 Y = np.transpose(np.zeros(len(stride_model_fit_df)))
 X = np.array(stride_model_fit_df.values.T)
-np.set_printoptions(suppress=True) # Don't show scientific numbers.
+np.set_printoptions(suppress=True)  # Don't show scientific numbers.
 initial_guess = [0.025, 17.302, 0.344, 3, 0.369]
 popt, pcov = curve_fit(curve_fit_stride, X, Y, maxfev=2000)
 alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal = popt
 Error = curve_fit_stride(X, alpha, beta, gamma, epsilon, delta)
 # RMSE
-sum((Error**2)/len(Error))**0.5
+sum((Error ** 2) / len(Error)) ** 0.5
 
 vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.loc[
     :, "S_not_stride_with_unconstrained_calibrated_parameters"
@@ -378,21 +376,46 @@ fig = make_subplots(
     cols=1,
     shared_xaxes=True,
     vertical_spacing=0.02,
-    subplot_titles=("HCM Estimated Speed",
-                    f"STRIDE Estimated Speed alpha={np.round(alpha,2)}, "
-                    f"beta={np.round(beta,2)}, gamma="
-                    f"{np.round(gamma,2)},"
-                    f"epsilon={np.round(epsilon,2)}, delta="
-                    f"{np.round(delta,2)}",
-                    f"STRIDE Estimated Speed with alpha={np.round(alpha_optimal,2)}, "
-                    f"beta={np.round(beta_optimal,2)}, gamma="
-                    f"{np.round(gamma_optimal,2)},"
-                    f"epsilon={np.round(epsilon,2)}, delta="
-                    f"{np.round(delta_optimal,2)}")
+    subplot_titles=(
+        "HCM Estimated Speed",
+        f"STRIDE Estimated Speed alpha={np.round(alpha,2)}, "
+        f"beta={np.round(beta,2)}, gamma="
+        f"{np.round(gamma,2)},"
+        f"epsilon={np.round(epsilon,2)}, delta="
+        f"{np.round(delta,2)}",
+        f"STRIDE Estimated Speed with alpha={np.round(alpha_optimal,2)}, "
+        f"beta={np.round(beta_optimal,2)}, gamma="
+        f"{np.round(gamma_optimal,2)},"
+        f"epsilon={np.round(epsilon,2)}, delta="
+        f"{np.round(delta_optimal,2)}",
+    ),
 )
 # Lazy way of plotting with plotly. Use express method to get the data then
 # use a hack to get the data from express method and plot it. There should be
 # cleaner and more intuitive way to generate these plots.
+common_hover_fields = [
+    "mainline_speed_limit",
+    "FFS_lilian",
+    "short_length_ls_ft",
+    "Vrf_percent",
+    "Vfr_percent",
+    "num_of_mainline_lane_weaving_section",
+    "mainline_grade",
+    "interchange_density",
+    "mainline_vol_pcu",
+    "Vrf",
+    "Vfr",
+    "c_hcm_basic_seg",
+    "bp_hcm_basic",
+    "does_hcm_says_use_merge_diverge",
+    "v_by_c",
+    "is_v_by_c_over_1",
+    "d_weave_hcm",
+    "s_hcm_basic",
+    "S_not_stride",
+    "S_not_stride_with_unconstrained_calibrated_parameters",
+    "s_weave_hcm",
+]
 plot_hcm = px.scatter(
     vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps,
     x="mainline_speed",
@@ -400,29 +423,7 @@ plot_hcm = px.scatter(
     color="file_name",
     symbol="file_name",
     trendline="ols",
-    hover_data=[
-        "mainline_speed_limit",
-        "FFS_lilian",
-        "short_length_ls_ft",
-        "Vrf_percent",
-        "Vfr_percent",
-        "num_of_mainline_lane_weaving_section",
-        "mainline_grade",
-        "interchange_density",
-        "mainline_vol_pcu",
-        "Vrf",
-        "Vfr",
-        "c_hcm_basic_seg",
-        "bp_hcm_basic",
-        "does_hcm_says_use_merge_diverge",
-        "v_by_c",
-        "is_v_by_c_over_1",
-        "d_weave_hcm",
-        "s_hcm_basic",
-        "S_not_stride",
-        "S_not_stride_with_unconstrained_calibrated_parameters",
-        "s_weave_hcm",
-    ],
+    hover_data=common_hover_fields,
 )
 # Add a 45 degree line to the data.
 plot_hcm.add_trace(
@@ -431,7 +432,7 @@ plot_hcm.add_trace(
         y=[20, 80],
         mode="lines",
         line=go.scatter.Line(color="gray"),
-        showlegend=False
+        showlegend=False,
     )
 )
 plot_hcm_45_degree_line = plot_hcm
@@ -446,29 +447,7 @@ plot_stride = px.scatter(
     color="file_name",
     symbol="file_name",
     trendline="ols",
-    hover_data=[
-        "mainline_speed_limit",
-        "FFS_lilian",
-        "short_length_ls_ft",
-        "Vrf_percent",
-        "Vfr_percent",
-        "num_of_mainline_lane_weaving_section",
-        "mainline_grade",
-        "interchange_density",
-        "mainline_vol_pcu",
-        "Vrf",
-        "Vfr",
-        "c_hcm_basic_seg",
-        "bp_hcm_basic",
-        "does_hcm_says_use_merge_diverge",
-        "v_by_c",
-        "is_v_by_c_over_1",
-        "d_weave_hcm",
-        "s_hcm_basic",
-        "S_not_stride",
-        "S_not_stride_with_unconstrained_calibrated_parameters",
-        "s_weave_hcm",
-    ],
+    hover_data=common_hover_fields,
 )
 plot_stride.add_trace(
     go.Scatter(
@@ -476,7 +455,7 @@ plot_stride.add_trace(
         y=[20, 80],
         mode="lines",
         line=go.scatter.Line(color="gray"),
-        showlegend=False
+        showlegend=False,
     )
 )
 plot_stride_45_degree_line = plot_stride
@@ -490,29 +469,7 @@ plot_stride_calibrated = px.scatter(
     color="file_name",
     symbol="file_name",
     trendline="ols",
-    hover_data=[
-        "mainline_speed_limit",
-        "FFS_lilian",
-        "short_length_ls_ft",
-        "Vrf_percent",
-        "Vfr_percent",
-        "num_of_mainline_lane_weaving_section",
-        "mainline_grade",
-        "interchange_density",
-        "mainline_vol_pcu",
-        "Vrf",
-        "Vfr",
-        "c_hcm_basic_seg",
-        "bp_hcm_basic",
-        "does_hcm_says_use_merge_diverge",
-        "v_by_c",
-        "is_v_by_c_over_1",
-        "d_weave_hcm",
-        "s_hcm_basic",
-        "S_not_stride",
-        "S_not_stride_with_unconstrained_calibrated_parameters",
-        "s_weave_hcm",
-    ],
+    hover_data=common_hover_fields,
 )
 plot_stride_calibrated.add_trace(
     go.Scatter(
@@ -520,35 +477,48 @@ plot_stride_calibrated.add_trace(
         y=[20, 80],
         mode="lines",
         line=go.scatter.Line(color="gray"),
-        showlegend=False
+        showlegend=False,
     )
 )
 plot_stride_calibrated_45_degree_line = plot_stride_calibrated
 data_plot_stride_calibrated = plot_stride_calibrated_45_degree_line["data"]
 
 # Iterate through the hcm and stride data togather and generate scatters.
-for dat1, dat2, dat3 in zip(data_plot_hcm, data_plot_stride, data_plot_stride_calibrated):
-    dat1['showlegend'] = False # Remove duplicate legend. Plotly is weird!
-    dat2['showlegend'] = False # Remove duplicate legend. Plotly is weird!
+for dat1, dat2, dat3 in zip(
+    data_plot_hcm, data_plot_stride, data_plot_stride_calibrated
+):
+    dat1["showlegend"] = False  # Remove duplicate legend. Plotly is weird!
+    dat2["showlegend"] = False  # Remove duplicate legend. Plotly is weird!
     fig.add_trace(dat1, row=1, col=1)
     fig.add_trace(dat2, row=2, col=1)
     fig.add_trace(dat3, row=3, col=1)
 
 # Make figures pretty.
-fig.update_xaxes(title_text="Observed Speed (mph)", range=[20, 80], fixedrange=True,
-                 row=3, col=1)
-fig.update_yaxes(title_text="HCM Estimated Speed (mph)", range=[20, 80],
-                 fixedrange=True, row=1, col=1)
-fig.update_yaxes(title_text="STRIDE Estimated Speed (mph)", range=[20, 80],
-                 fixedrange=True, row=2, col=1)
-fig.update_yaxes(title_text="STRIDE Calibrated Parameters Estimated Speed (mph)", range=[20, 80],
-                 fixedrange=True, row=3, col=1)
-fig.update_layout(
-    autosize=True,
-    height=1400,
-    width=900,
-    margin=dict(l=200)
+fig.update_xaxes(
+    title_text="Observed Speed (mph)", range=[20, 80], fixedrange=True, row=3, col=1
 )
+fig.update_yaxes(
+    title_text="HCM Estimated Speed (mph)",
+    range=[20, 80],
+    fixedrange=True,
+    row=1,
+    col=1,
+)
+fig.update_yaxes(
+    title_text="STRIDE Estimated Speed (mph)",
+    range=[20, 80],
+    fixedrange=True,
+    row=2,
+    col=1,
+)
+fig.update_yaxes(
+    title_text="STRIDE Calibrated Parameters Estimated Speed (mph)",
+    range=[20, 80],
+    fixedrange=True,
+    row=3,
+    col=1,
+)
+fig.update_layout(autosize=True, height=1400, width=900, margin=dict(l=200))
 plot(
     fig,
     filename=os.path.join(path_figures_v1, "HCM_vs_STRIDE_vs_Obs_speed.html",),
