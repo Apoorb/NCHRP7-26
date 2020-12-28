@@ -1,3 +1,6 @@
+"""
+Fit accelerated failure time model on the merge uncongested and pre-breakdown data.
+"""
 import os
 import pandas as pd
 from lifelines import WeibullAFTFitter
@@ -75,6 +78,7 @@ if __name__ == "__main__":
         "ffs_cap_df",
     ]
 
+    # Use one hot coding on categorical variables.
     prebreakdown_merge_vol_fil = one_hot_coding_cat(prebreakdown_merge_vol_fil)
     prebreakdown_merge_len_acc_1500 = one_hot_coding_cat(
         prebreakdown_merge_len_acc_1500
@@ -84,9 +88,11 @@ if __name__ == "__main__":
         "ramp_metering+length_of_acceleration_lane+ffs_cap_df"
         "+number_of_mainline_lane_downstream+simple_merge"
     )
+    # Fit accelerated failure time model.
     aft_all_data = fit_aft_model(prebreakdown_merge_vol_fil, formula_=formula_)
     aft_all_data.print_summary(decimals=5)
     aft_all_data.median_survival_time_
+    # Fit accelerated failure time model with just the intercept.
     formula_ = "1"
     aft_intercept = fit_aft_model(prebreakdown_merge_vol_fil, formula_=formula_)
     aft_intercept.print_summary()

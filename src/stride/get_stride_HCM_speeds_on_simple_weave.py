@@ -434,7 +434,7 @@ fig = make_subplots(
         f"alpha={np.round(alpha_optimal,2)}, "
         f"beta={np.round(beta_optimal,2)}, gamma="
         f"{np.round(gamma_optimal,2)}, "
-        f"epsilon={np.round(epsilon,2)}, delta="
+        f"epsilon={np.round(epsilon_optimal,2)}, delta="
         f"{np.round(delta_optimal,2)}",
     ),
 )

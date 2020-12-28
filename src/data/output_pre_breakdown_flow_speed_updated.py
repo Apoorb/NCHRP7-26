@@ -10,7 +10,7 @@ output.
 
 **If possible let Azy generate the ouput of this script.**
 
-The outputs of this script are the following two file with following columns:
+The outputs of this script includes the following two files with following columns:
     1_Simple Merge_1_pre_brkdn.csv: Time, MainlineSpeed, MainlineVol
         This file has the pre-breakdown data.
     1_Simple Merge_1_uncongested.csv: Time, MainlineSpeed, MainlineVol
