@@ -632,7 +632,7 @@ def show_figures(start):
 
 if __name__ == "__main__":
     # This file is used to figure out if FFS is fixed. If so, it also tells what FFS to
-    #use.
+    # use.
     path_to_site_summary = (
         r"C:\Users\abibeka\Kittelson & Associates, Inc\Burak Cesme - NCHRP 07-26"
         r"\Task 6 - Execute Phase II Plan\Site Analysis & Metadata"

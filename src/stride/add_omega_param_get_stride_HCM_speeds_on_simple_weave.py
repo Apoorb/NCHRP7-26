@@ -3,7 +3,7 @@ Script for:
     reading the uncongested volume and speed data along with metadata.
     Estimating HCM speed
     Estimating STRIDE speed with Nagui's parameter
-    Estimating STRIDE parmaeters and then estimating speed.
+    Estimating STRIDE parmaeters and then estimating speed---add omega to Vfr.
     Plotting HCM, STRIDE, and calibrated STRIDE speeds.
 Created by: Apoorba Bibeka
 Updated on: 12/24/2020
@@ -242,7 +242,7 @@ delta = 0.369
 epsilon = 3
 
 
-def get_S_not_STRIDE(row, alpha, beta, gamma, epsilon, delta):
+def get_S_not_STRIDE(row, alpha, beta, gamma, epsilon, delta, omega=1):
     Vrf = row.Vrf
     Vfr = row.Vfr
     nl = row.num_of_mainline_lane_weaving_section
@@ -252,7 +252,7 @@ def get_S_not_STRIDE(row, alpha, beta, gamma, epsilon, delta):
     return (
         s_hcm_basic
         - alpha
-        * (((beta * Vrf + Vfr) / (nl) ** epsilon) ** gamma)
+        * (((beta * Vrf + omega * Vfr) / (nl) ** epsilon) ** gamma)
         * (mainline_vol_pcu - 500)
         * (1 / short_length_ls_ft) ** delta
     )
@@ -374,17 +374,17 @@ stride_model_fit_df = (
     )
 )
 
-# Estimate the STRIDE parameters---unconstrained optimization
+# Estimate the STRIDE parameters---unconstrained optimization---use omega for Vfr
 # Check with Nagui if STIDE parameters need to be constrained
 # for optimization
 
 
-def curve_fit_stride(X, alpha, beta, gamma, epsilon, delta):
+def curve_fit_stride(X, alpha, beta, gamma, epsilon, delta, omega):
     s_knot_minus_s_b, Vrf, Vfr, nl, mainline_vol_pcu, short_length_ls_ft = X
     return (
         s_knot_minus_s_b
         + alpha
-        * (((beta * Vrf + Vfr) / (nl) ** epsilon) ** gamma)
+        * (((beta * Vrf + omega * Vfr) / (nl) ** epsilon) ** gamma)
         * (mainline_vol_pcu - 500)
         * (1 / short_length_ls_ft) ** delta
     )
@@ -393,11 +393,10 @@ def curve_fit_stride(X, alpha, beta, gamma, epsilon, delta):
 Y = np.transpose(np.zeros(len(stride_model_fit_df)))  # Target is zero error
 X = np.array(stride_model_fit_df.values.T)
 np.set_printoptions(suppress=True)  # Don't show scientific numbers.
-initial_guess = [0.025, 17.302, 0.344, 3, 0.369]
-popt, pcov = curve_fit(curve_fit_stride, X, Y, maxfev=2000)
-alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal = popt
+popt, pcov = curve_fit(curve_fit_stride, X, Y, maxfev=5000)
+alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal, omega_optimal = popt
 Error = curve_fit_stride(
-    X, alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal
+    X, alpha_optimal, beta_optimal, gamma_optimal, epsilon_optimal, delta_optimal, omega_optimal
 )
 # RMSE
 rmse_calibrated_stride = np.round(sum((Error ** 2) / len(Error)) ** 0.5, 2)
@@ -414,6 +413,7 @@ vol_weave_df_simple_fil_stride_hcm_extra_cols_hcm_steps.loc[
     gamma=gamma_optimal,
     epsilon=epsilon_optimal,
     delta=delta_optimal,
+    omega=omega_optimal,
     axis=1,
 )
 #########################################################################################
@@ -429,7 +429,7 @@ fig = make_subplots(
     shared_xaxes=True,
     vertical_spacing=0.04,
     subplot_titles=(
-        f"fHCM Estimated Speed (RMSE={rmse_hcm_speed})",
+        f"HCM Estimated Speed (RMSE={rmse_hcm_speed})",
         f"STRIDE Estimated Speed (RMSE={rmse_stride_speed}) "
         f"alpha={np.round(alpha,2)}, "
         f"beta={np.round(beta,2)}, gamma="
@@ -441,7 +441,7 @@ fig = make_subplots(
         f"beta={np.round(beta_optimal,2)}, gamma="
         f"{np.round(gamma_optimal,2)}, "
         f"epsilon={np.round(epsilon_optimal,2)}, delta="
-        f"{np.round(delta_optimal,2)}",
+        f"{np.round(delta_optimal,2)}, omega={np.round(omega_optimal, 2)}",
     ),
 )
 # Lazy way of plotting with plotly. Use express method to get the data then
@@ -573,10 +573,10 @@ fig.update_yaxes(
     row=3,
     col=1,
 )
-fig.update_layout(autosize=True, height=1400, width=900, margin=dict(l=200, t=20))
+fig.update_layout(autosize=True, height=1400, width=1300, margin=dict(l=350, t=20))
 plot(
     fig,
-    filename=os.path.join(path_figures_v1, "HCM_vs_STRIDE_vs_Obs_speed.html",),
+    filename=os.path.join(path_figures_v1, "omega_HCM_vs_STRIDE_vs_Obs_speed_500_vph.html"),
     auto_open=True,
 )
 

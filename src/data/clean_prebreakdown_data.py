@@ -110,7 +110,8 @@ def clean_site_sum_merge(site_sum_merge_, iloc_max_row):
                 "number_of_on_ramp_lanes_at_ramp_terminal",
                 "number_of_on_ramp_lane_gore",
                 "presence_of_adjacent_ramps",
-                "lane_drop_y_n" "hv",
+                "lane_drop_y_n",
+                "hv",
                 "mainline_grade",
                 "ramp_metering",
                 "length_of_acceleration_lane",
@@ -387,6 +388,8 @@ if __name__ == "__main__":
         )
         .assign(file_no=lambda df: df.file_no.astype(int))
     )
+    # 41: Number of useful rows in the merge spreadsheet.
+    # 60: Number of useful columns in the merge spreadsheet.
     site_sum_merge = read_site_data(
         path_=path_site_char, sheet_name_="Merge", nrows_=41, usecols_=range(0, 60)
     )
@@ -397,21 +400,13 @@ if __name__ == "__main__":
         os.path.join(path_interim, "cap_merge_meta.csv"), index=False
     )
     get_geometry_list(path_prebreakdown_all)
-    clean_geometry_type_list = ["Simple merge", "Ramp metered"]
-    prebreakdown_df_simple_merge = get_prebreakdown_data(
-        path_prebreakdown_all_=path_prebreakdown_all,
-        clean_geometry_type_list_=clean_geometry_type_list,
-    )
     clean_geometry_type_list = get_geometry_list(path_prebreakdown_all)
+
     prebreakdown_df_all = get_prebreakdown_data(
         path_prebreakdown_all_=path_prebreakdown_all,
         clean_geometry_type_list_=clean_geometry_type_list,
     )
-    prebreakdown_df_simple_merge_meta = (
-        prebreakdown_df_simple_merge.merge(site_sum_merge_fil, on="file_no", how="left")
-        .rename(columns={"file_name_x": "file_name"})
-        .drop(columns="file_name_y")
-    )
+
     prebreakdown_df_merge_all_meta = (
         prebreakdown_df_all.merge(site_sum_merge_fil, on="file_no", how="right")
         .rename(columns={"file_name_x": "file_name"})

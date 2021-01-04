@@ -24,7 +24,7 @@ if not os.path.exists(path_plot_dump):
     os.mkdir(path_plot_dump)
 path_cap_df_merge_and_meta = os.path.join(path_interim, "all_merge_meta.csv")
 path_prebreakdown_merge = os.path.join(
-    path_interim, "prebreakdown_df_all_merge_meta.csv"
+    path_interim, "prebkdn_uncongested_merge_meta.csv"
 )
 
 
@@ -68,15 +68,16 @@ if __name__ == "__main__":
         lambda df: (df.length_of_acceleration_lane <= 1500)
     ]
 
-    x_vars = [
-        "length_of_acceleration_lane",
-        "fwy_to_fwy_ramp",
-        "number_of_on_ramp_lane_gore",
-        "geometry_type",
-        "number_of_mainline_lane_downstream",
-        "ramp_metering",
-        "ffs_cap_df",
-    ]
+    # Columns in prebreakdown_merge_vol_fil that can be used for AFT
+    # x_vars = [
+    #     "length_of_acceleration_lane",
+    #     "fwy_to_fwy_ramp",
+    #     "number_of_on_ramp_lane_gore",
+    #     "geometry_type",
+    #     "number_of_mainline_lane_downstream",
+    #     "ramp_metering",
+    #     "ffs_cap_df",
+    # ]
 
     # Use one hot coding on categorical variables.
     prebreakdown_merge_vol_fil = one_hot_coding_cat(prebreakdown_merge_vol_fil)
