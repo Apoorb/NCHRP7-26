@@ -23,29 +23,6 @@ import math
 
 pio.renderers.default = "browser"
 
-# Resources/ general overview
-
-# 1 os: I use this to stitch togaher paths.
-
-# 2 pandas: my bread and butter. The best way to learn it would be to read the pandas
-# documentation. Following are some resources that I have read:
-# https://pandas.pydata.org/pandas-docs/stable/user_guide/groupby.html
-#  https://pandas.pydata.org/pandas-docs/stable/user_guide/reshaping.html
-# Pandas assign, rename, filter, drop, loc, query, datetime, and agg functions.
-
-# 3: import plotly.io as pio
-# import plotly.express as px
-# from plotly.subplots import make_subplots
-# from plotly.offline import plot
-# import plotly.graph_objects as go
-# Start here for learning plotly: https://plotly.com/python/plotly-express/
-# I perfer it over seaborn and matplotlib for plotting as I generally able to do more
-# here with less effort.
-
-# 4: from scipy.optimize import curve_fit: scientific python for curve fitting.
-# 5:  from sklearn.metrics import mean_squared_error:  Get mean squared error. One stop
-# shop for most of the machine learning algorithm.
-
 # Set paths:
 path_to_project = str(get_project_root())
 path_raw = os.path.join(path_to_project, "data", "raw")
@@ -58,6 +35,7 @@ path_plot_dump = os.path.join(path_figures_v1, "plot_dump")
 if not os.path.exists(path_plot_dump):
     os.mkdir(path_plot_dump)
 
+# Output from get_ufl_merge_ramp_volumes.py in the src-->data folder.
 path_out_ufl_merge_ramp_data = os.path.join(path_interim,
                                             "all_ufl_merge_ramp_data.xlsx")
 all_ufl_merge_ramp_data = pd.read_excel(path_out_ufl_merge_ramp_data)
@@ -66,7 +44,7 @@ all_ufl_merge_ramp_data = pd.read_excel(path_out_ufl_merge_ramp_data)
 # clean_prebreakdown_data.py also handles duplicated pre-breakdown and uncongested volumes
 path_volume_merge = os.path.join(path_interim, "prebkdn_uncongested_merge_meta.csv")
 
-# Read the combined data for all weave sites and the metadata (output from the
+# Read the combined data for all merge sites and the metadata (output from the
 # clean_prebreakdown_data.py).
 vol_merge_df = pd.read_csv(path_volume_merge)
 vol_merge_df_simple = (
@@ -82,7 +60,7 @@ vol_merge_df_simple_ramp_df = (
         all_ufl_merge_ramp_data,
         left_on=["file_name", "Time"],
         right_on=["site_nm", "tini"],
-        how="inner"
+        how="inner" # inner join---keep rows where both mainline and ramp data is present.
     )
 )
 
@@ -155,14 +133,20 @@ vol_merge_df_simple_ramp_df_fil_extra_cols = vol_merge_df_simple_ramp_df_fil.ass
     # & (df.ffs_cap_df <= 75)
     & (~df.s_hcm_basic.isna())
 ]
+
+
+
+
+
+
 # Compute S_knot from STRIDE method with Nagui's calibrated parameters
 # STRIDE calibrated parameters from Nagui's research
-alpha = 0.12
-beta = 0.44
-gamma = 0.63
-delta = 0.67
-epsilon = 3.23
-omega = 1.19
+alpha = 0.025
+beta = 17.302
+gamma = 0.344
+delta = 0.369
+epsilon = 3
+omega = 1
 
 def get_S_not_STRIDE(row, alpha, beta, gamma, epsilon, delta, omega=1):
     Vrf = row.ramp_flow_rate_per_lane_pcu
@@ -256,6 +240,14 @@ print(
     f"Root mean squared error for Calibrated STRIDE method = {rmse_calibrated_stride}"
 )
 
+# Use the optimal values from weave
+alpha_optimal = 0.12
+beta_optimal = 0.44
+gamma_optimal = 0.63
+epsilon_optimal = 3.23
+delta_optimal = 0.67
+omega_optimal = 1.19
+
 vol_merge_df_simple_ramp_df_fil_extra_cols.loc[
     :, "S_not_stride_with_unconstrained_calibrated_parameters"
 ] = vol_merge_df_simple_ramp_df_fil_extra_cols.apply(
@@ -268,7 +260,13 @@ vol_merge_df_simple_ramp_df_fil_extra_cols.loc[
     omega=omega_optimal,
     axis=1,
 )
-
+rmse_calibrated_stride = math.sqrt(
+    mean_squared_error(
+        vol_merge_df_simple_ramp_df_fil_extra_cols.mainline_speed,
+        vol_merge_df_simple_ramp_df_fil_extra_cols.S_not_stride_with_unconstrained_calibrated_parameters,
+    )
+)
+rmse_calibrated_stride = np.round(rmse_calibrated_stride, 2)
 #########################################################################################
 
 # Plots the Stride data
@@ -289,11 +287,11 @@ fig = make_subplots(
         f"epsilon={np.round(epsilon,2)}, delta="
         f"{np.round(delta,2)}",
         f"STRIDE Estimated Speed (RMSE={rmse_calibrated_stride}) with "
-        f"alpha={np.round(alpha_optimal,2)}, "
+        f"alpha={np.round(alpha_optimal,3)}, "
         f"beta={np.round(beta_optimal,2)}, gamma="
         f"{np.round(gamma_optimal,2)}, "
         f"epsilon={np.round(epsilon_optimal,2)}, delta="
-        f"{np.round(delta_optimal,2)}, omega={np.round(omega_optimal, 2)}",
+        f"{np.round(delta_optimal,2)}",
     ),
 )
 # Lazy way of plotting with plotly. Use express method to get the data then
@@ -428,5 +426,5 @@ for file in vol_merge_df_simple_ramp_df_fil_extra_cols.file_name.unique():
     plot(
         fig,
         filename=os.path.join(path_figures_v1, f"merge_{file}_stride_fit_data.html"),
-        auto_open=True,
+        auto_open=False,
     )
