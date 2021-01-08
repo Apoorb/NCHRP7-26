@@ -35,10 +35,10 @@ path_plot_dump = os.path.join(path_figures_v1, "plot_dump")
 if not os.path.exists(path_plot_dump):
     os.mkdir(path_plot_dump)
 
-# Output from get_ufl_merge_ramp_volumes.py in the src-->data folder.
-path_out_ufl_merge_ramp_data = os.path.join(path_interim,
-                                            "all_ufl_merge_ramp_data.xlsx")
-all_ufl_merge_ramp_data = pd.read_excel(path_out_ufl_merge_ramp_data)
+# Output from get_ufl_merge_ramp_volumes_v2.py in the src-->data folder.
+path_out_ufl_merge_ramp_upstream_volume_data = os.path.join(path_interim,
+                                            "all_ufl_merge_ramp_upstream_mainline_data.xlsx")
+all_ufl_merge_ramp_upstream_mainline_data = pd.read_excel(path_out_ufl_merge_ramp_upstream_volume_data)
 # I used prebreakdown data, uncongested data, metadata for attributes, capacity data to
 # create prebkdn_uncongested_weave_and_meta.csv in the clean_prebreakdown_data.py.
 # clean_prebreakdown_data.py also handles duplicated pre-breakdown and uncongested volumes
@@ -57,7 +57,7 @@ vol_merge_df_simple.file_name.unique()
 vol_merge_df_simple_ramp_df = (
     vol_merge_df_simple
     .merge(
-        all_ufl_merge_ramp_data,
+        all_ufl_merge_ramp_upstream_mainline_data,
         left_on=["file_name", "Time"],
         right_on=["site_nm", "tini"],
         how="inner" # inner join---keep rows where both mainline and ramp data is present.
@@ -69,20 +69,15 @@ vol_merge_df_simple_ramp_df.file_name.unique()
 vol_merge_df_simple_ramp_df_fil = (
     vol_merge_df_simple_ramp_df
     .sort_values(["file_name", "Time"])
-    .filter(
-        items=[
-            "file_name",
-            "Time",
-            "mainline_vol",
-            "mainline_speed",
-            "mainline_speed_limit",
-            "ffs_cap_df",
-            "length_of_acceleration_lane",
-            "ramp_flow_rate_per_lane",
-            "number_of_mainline_lane_downstream",
-            "mainline_grade",
-            "hv",
-        ]
+    .rename(
+        columns={
+            "total_upstream_flow_rate": "v_F_upstream_vph",
+            "upstream_flowrate_right_2nd_right_lane": "v_12_upstream_vph",
+            "upstream_flowrate_outer_lanes_per_lane": "v_O_upstream_vphpl",
+            "Num_outer_lanes": "n_o_upstream",
+            "default_ramp_ffs_mph": "ffs_ramp_default",
+            "ramp_flow_rate_per_lane": "v_R_vphpl"
+        }
     )
     .assign(
         ET=lambda df: np.select(
@@ -90,7 +85,32 @@ vol_merge_df_simple_ramp_df_fil = (
         ),
         f_hv=lambda df: 1 / (1 + ((df.hv / 100) * (df.ET - 1))),
         mainline_vol_pcu=lambda df: df.mainline_vol / df.f_hv,
-        ramp_flow_rate_per_lane_pcu=lambda df: df.ramp_flow_rate_per_lane / df.f_hv
+        v_R_pcphpl=lambda df: df.v_R_vphpl / df.f_hv,
+        v_F_upstream_pcph=lambda df: df.v_F_upstream_vph / df.f_hv,
+        v_O_upstream_pcphpl=lambda df: (df.v_O_upstream_vphpl / df.f_hv).fillna(0),
+        v_12_upstream_pcph=lambda df: df.v_12_upstream_vph / df.f_hv,
+    )
+    .filter(
+        items=[
+            "file_name",
+            "Time",
+            "mainline_vol",
+            "mainline_vol_pcu",
+            "mainline_speed",
+            "mainline_speed_limit",
+            "ffs_cap_df",
+            "length_of_acceleration_lane",
+            "v_R_pcphpl",
+            "number_of_lanes_upstream_from_ufl_detector_columns",
+            "number_of_mainline_lane_downstream",
+            "mainline_grade",
+            "hv",
+            "v_F_upstream_pcph",
+            "v_12_upstream_pcph",
+            "v_O_upstream_pcphpl",
+            "n_o_upstream",
+            "ffs_ramp_default",
+        ]
     )
 )
 # QAQC dataframe
@@ -129,14 +149,36 @@ vol_merge_df_simple_ramp_df_fil_extra_cols = vol_merge_df_simple_ramp_df_fil.ass
     ),
 ).loc[
     lambda df: (df.mainline_speed >= 0.7 * df.ffs_cap_df)
-    & (df.mainline_vol_pcu >= 1000)
+    & (df.mainline_vol_pcu >= 500)
     # & (df.ffs_cap_df <= 75)
     & (~df.s_hcm_basic.isna())
 ]
 
-
-
-
+# Compute HCM Predicted Speed
+vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed=(
+    vol_merge_df_simple_ramp_df_fil_extra_cols
+    .assign(
+        v12R=lambda df:df.v_12_upstream_pcph + df.v_R_pcphpl,
+        M_s_hcm=lambda df: 0.321 + 0.0039 * np.exp(df.v12R / 1000)
+                           - 0.002
+                           * (df.length_of_acceleration_lane * df.ffs_ramp_default / 1000),
+        S_R_hcm=lambda df: df.ffs_cap_df - (df.ffs_cap_df - 42) * df.M_s_hcm,
+        S_O_hcm=lambda df: np.select(
+            [df.v_O_upstream_pcphpl < 500, df.v_O_upstream_pcphpl <= 2300, df.v_O_upstream_pcphpl > 2300],
+            [df.ffs_cap_df, df.ffs_cap_df - 0.0036 * (df.v_O_upstream_pcphpl-500), df.ffs_cap_df - 6.53 - 0.006*(df.v_O_upstream_pcphpl-2300)]
+        ),
+        S_hcm=lambda df: (df.v12R + df.v_O_upstream_pcphpl * df.n_o_upstream)
+                         / ((df.v12R / df.S_R_hcm) + (df.v_O_upstream_pcphpl * df.n_o_upstream / df.S_O_hcm))
+    )
+)
+rmse_hcm_speed = math.sqrt(
+    mean_squared_error(
+        vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.mainline_speed,
+        vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.S_hcm,
+    )
+)
+rmse_hcm_speed = np.round(rmse_hcm_speed, 2)
+print(f"Root mean squared error for HCM method = {rmse_hcm_speed}")
 
 
 # Compute S_knot from STRIDE method with Nagui's calibrated parameters
@@ -149,7 +191,7 @@ epsilon = 3
 omega = 1
 
 def get_S_not_STRIDE(row, alpha, beta, gamma, epsilon, delta, omega=1):
-    Vrf = row.ramp_flow_rate_per_lane_pcu
+    Vrf = row.v_R_pcphpl
     Vfr = 0
     nl = row.number_of_mainline_lane_downstream
     mainline_vol_pcu = row.mainline_vol_pcu
@@ -164,9 +206,9 @@ def get_S_not_STRIDE(row, alpha, beta, gamma, epsilon, delta, omega=1):
     )
 
 
-vol_merge_df_simple_ramp_df_fil_extra_cols.loc[
+vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.loc[
     :, "S_not_stride"
-] = vol_merge_df_simple_ramp_df_fil_extra_cols.apply(
+] = vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.apply(
     get_S_not_STRIDE,
     alpha=alpha,
     beta=beta,
@@ -177,22 +219,22 @@ vol_merge_df_simple_ramp_df_fil_extra_cols.loc[
     axis=1,
 )
 # QAQC dataframe
-test_stride_speed_calc = vol_merge_df_simple_ramp_df_fil_extra_cols.drop_duplicates(
+test_stride_speed_calc = vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.drop_duplicates(
     "file_name"
 )
 
 # Get RMSE
 rmse_stride_speed = math.sqrt(
     mean_squared_error(
-        vol_merge_df_simple_ramp_df_fil_extra_cols.mainline_speed,
-        vol_merge_df_simple_ramp_df_fil_extra_cols.S_not_stride,
+        vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.mainline_speed,
+        vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.S_not_stride,
     )
 )
 rmse_stride_speed = np.round(rmse_stride_speed, 2)
 print(f"Root mean squared error for STRIDE method = {rmse_stride_speed}")
 # Filter to columns that are needed for the STRIDE equation.
 stride_model_fit_df = (
-    vol_merge_df_simple_ramp_df_fil_extra_cols.assign(
+    vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.assign(
         s_knot_minus_s_b=lambda df: df.mainline_speed - df.s_hcm_basic,
         Vfr=0
     )
@@ -201,7 +243,7 @@ stride_model_fit_df = (
         # curve_fit_stride in this order. Do not change the variable order below!
         items=[
             "s_knot_minus_s_b",
-            "ramp_flow_rate_per_lane_pcu",
+            "v_R_pcphpl",
             "Vfr",
             "nl",
             "mainline_vol_pcu",
@@ -248,9 +290,9 @@ epsilon_optimal = 3.23
 delta_optimal = 0.67
 omega_optimal = 1.19
 
-vol_merge_df_simple_ramp_df_fil_extra_cols.loc[
+vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.loc[
     :, "S_not_stride_with_unconstrained_calibrated_parameters"
-] = vol_merge_df_simple_ramp_df_fil_extra_cols.apply(
+] = vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.apply(
     get_S_not_STRIDE,
     alpha=alpha_optimal,
     beta=beta_optimal,
@@ -262,8 +304,8 @@ vol_merge_df_simple_ramp_df_fil_extra_cols.loc[
 )
 rmse_calibrated_stride = math.sqrt(
     mean_squared_error(
-        vol_merge_df_simple_ramp_df_fil_extra_cols.mainline_speed,
-        vol_merge_df_simple_ramp_df_fil_extra_cols.S_not_stride_with_unconstrained_calibrated_parameters,
+        vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.mainline_speed,
+        vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.S_not_stride_with_unconstrained_calibrated_parameters,
     )
 )
 rmse_calibrated_stride = np.round(rmse_calibrated_stride, 2)
@@ -275,11 +317,12 @@ rmse_calibrated_stride = np.round(rmse_calibrated_stride, 2)
 # speed.
 # Create two subplots
 fig = make_subplots(
-    rows=2,
+    rows=3,
     cols=1,
     shared_xaxes=True,
     vertical_spacing=0.04,
     subplot_titles=(
+        f"HCM Estimated Speed (RMSE={rmse_hcm_speed})",
         f"STRIDE Estimated Speed (RMSE={rmse_stride_speed}) "
         f"alpha={np.round(alpha,2)}, "
         f"beta={np.round(beta,2)}, gamma="
@@ -287,11 +330,11 @@ fig = make_subplots(
         f"epsilon={np.round(epsilon,2)}, delta="
         f"{np.round(delta,2)}",
         f"STRIDE Estimated Speed (RMSE={rmse_calibrated_stride}) with "
-        f"alpha={np.round(alpha_optimal,3)}, "
+        f"alpha={np.round(alpha_optimal,2)}, "
         f"beta={np.round(beta_optimal,2)}, gamma="
         f"{np.round(gamma_optimal,2)}, "
         f"epsilon={np.round(epsilon_optimal,2)}, delta="
-        f"{np.round(delta_optimal,2)}",
+        f"{np.round(delta_optimal,2)}, omega={np.round(omega_optimal, 2)}",
     ),
 )
 # Lazy way of plotting with plotly. Use express method to get the data then
@@ -301,7 +344,7 @@ common_hover_fields = [
     "mainline_speed_limit",
     "ffs_cap_df",
     "length_of_acceleration_lane",
-    "ramp_flow_rate_per_lane_pcu",
+    "v_R_pcphpl",
     "number_of_mainline_lane_downstream",
     "mainline_grade",
     "mainline_vol_pcu",
@@ -310,16 +353,39 @@ common_hover_fields = [
     "s_hcm_basic",
     "S_not_stride",
     "S_not_stride_with_unconstrained_calibrated_parameters",
+    "S_hcm",
 ]
-
+plot_hcm = px.scatter(
+    vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed,
+    x="mainline_speed",
+    y="S_hcm",
+    color="file_name",
+    symbol="file_name",
+    trendline="ols",
+    hover_data=common_hover_fields,
+)
+# Add a 45 degree line to the data.
+plot_hcm.add_trace(
+    go.Scatter(
+        x=[20, 95],
+        y=[20, 95],
+        mode="lines",
+        line=go.scatter.Line(color="gray"),
+        showlegend=False,
+    )
+)
+plot_hcm_45_degree_line = plot_hcm
+# Plotly plots have two components: data and layout. Extract the data.
+data_plot_hcm = plot_hcm_45_degree_line["data"]
 # Repeat above on STRIDE data. Again, this is the lazy approach; use functions or loops
 # to have a cleaner implementation of this.
 plot_stride = px.scatter(
-    vol_merge_df_simple_ramp_df_fil_extra_cols,
+    vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed,
     x="mainline_speed",
     y="S_not_stride",
     color="file_name",
     symbol="file_name",
+    trendline="ols",
     hover_data=common_hover_fields,
 )
 plot_stride.add_trace(
@@ -337,11 +403,12 @@ data_plot_stride = plot_stride_45_degree_line["data"]
 # approach; use functions or loops to have a cleaner implementation of this.
 # TODO: Add loop to make all this plotting stuff less clunky.
 plot_stride_calibrated = px.scatter(
-    vol_merge_df_simple_ramp_df_fil_extra_cols,
+    vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed,
     x="mainline_speed",
     y="S_not_stride_with_unconstrained_calibrated_parameters",
     color="file_name",
     symbol="file_name",
+    trendline="ols",
     hover_data=common_hover_fields,
 )
 plot_stride_calibrated.add_trace(
@@ -357,30 +424,38 @@ plot_stride_calibrated_45_degree_line = plot_stride_calibrated
 data_plot_stride_calibrated = plot_stride_calibrated_45_degree_line["data"]
 
 # Iterate through the hcm and stride data togather and generate scatters.
-for dat2, dat3 in zip(
-    data_plot_stride, data_plot_stride_calibrated
+for dat1, dat2, dat3 in zip(
+    data_plot_hcm, data_plot_stride, data_plot_stride_calibrated
 ):
+    dat1["showlegend"] = False  # Remove duplicate legend. Plotly is weird!
     dat2["showlegend"] = False  # Remove duplicate legend. Plotly is weird!
-    fig.add_trace(dat2, row=1, col=1)
-    fig.add_trace(dat3, row=2, col=1)
+    fig.add_trace(dat1, row=1, col=1)
+    fig.add_trace(dat2, row=2, col=1)
+    fig.add_trace(dat3, row=3, col=1)
 
 # Make figures pretty.
 fig.update_xaxes(
-    title_text="Observed Speed (mph)", range=[20, 95], fixedrange=True, row=2, col=1
+    title_text="Observed Speed (mph)", range=[20, 95], fixedrange=True, row=3, col=1
 )
-
 fig.update_yaxes(
-    title_text="STRIDE Estimated Speed (mph)",
+    title_text="HCM Estimated Speed (mph)",
     range=[20, 95],
     fixedrange=True,
     row=1,
     col=1,
 )
 fig.update_yaxes(
-    title_text="STRIDE Calibrated Parameters Estimated Speed (mph)",
+    title_text="STRIDE Estimated Speed (mph)",
     range=[20, 95],
     fixedrange=True,
     row=2,
+    col=1,
+)
+fig.update_yaxes(
+    title_text="STRIDE Calibrated Parameters Estimated Speed (mph)",
+    range=[20, 95],
+    fixedrange=True,
+    row=3,
     col=1,
 )
 fig.update_layout(autosize=True, height=1400, width=1300, margin=dict(l=350, t=20))
@@ -390,25 +465,25 @@ plot(
     auto_open=True,
 )
 
-
 # Create plots for showing data points used for STRIDE method.
-for file in vol_merge_df_simple_ramp_df_fil_extra_cols.file_name.unique():
+for file in vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.file_name.unique():
+
     fig = go.Figure()
 
-    vol_merge_df_simple_ramp_df_fil_plots = vol_merge_df_simple_ramp_df_fil.loc[
+    vol_weave_df_simple_fil_stride_hcm_plot = vol_merge_df_simple_ramp_df_fil.loc[
         lambda df: df.file_name == file
     ]
     fig.add_trace(
         go.Scatter(
             name="Uncongested volumes",
             mode="markers",
-            x=vol_merge_df_simple_ramp_df_fil_plots.mainline_vol,
-            y=vol_merge_df_simple_ramp_df_fil_plots.mainline_speed,
+            x=vol_weave_df_simple_fil_stride_hcm_plot.mainline_vol,
+            y=vol_weave_df_simple_fil_stride_hcm_plot.mainline_speed,
             marker=dict(color="blue", symbol="circle",),
         )
     )
 
-    stride_df_plot = vol_merge_df_simple_ramp_df_fil_plots.loc[
+    stride_df_plot = vol_merge_df_simple_ramp_df_fil_extra_cols_hcm_merge_speed.loc[
         lambda df: df.file_name == file
     ]
     fig.add_trace(
@@ -426,5 +501,5 @@ for file in vol_merge_df_simple_ramp_df_fil_extra_cols.file_name.unique():
     plot(
         fig,
         filename=os.path.join(path_figures_v1, f"merge_{file}_stride_fit_data.html"),
-        auto_open=False,
+        auto_open=True,
     )

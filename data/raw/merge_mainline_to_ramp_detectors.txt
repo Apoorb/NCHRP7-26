@@ -2,13 +2,13 @@
 #    Directory: H:\23\23506 - NCHRP 07-26 - Freeway Segment Methods\Task 6 - Execute Phase II Plan\Data Analysis\Sample Analysis\Data\UFL
 #    File: NCHRP 15-57- detector database.xlsx
 #
-Site; Mainline Detector; Ramp Detector
-8_Simple Merge_8; 350; 1,348
-9_Simple Merge_9; 403,328; 403,909
-10_Simple Merge_10; 10,121,310; 1,083,110
-11_Simple Merge_11; 876; 1,872
-12_Simple Merge_12; 834; 1,830
-13_Simple Merge_13; 10,109,810; 10,109,710
-14_Simple Merge_14; 232; 1,231
-15_Simple Merge_15; 401,289; 417,124
-16_Simple Merge_16; 190; 1,188
+Site; Mainline Detector; Ramp Detector; Upstream Mainline Detector
+8_Simple Merge_8; 350; 1,348; 348
+9_Simple Merge_9; 403,328; 403,909; 403,908
+10_Simple Merge_10; 10,121,310; 1,083,110; 10,121,110
+11_Simple Merge_11; 876; 1,872; 872
+12_Simple Merge_12; 834; 1,830; 830
+13_Simple Merge_13; 10,109,810; 10,109,710; 10,109,610
+14_Simple Merge_14; 232; 1,231; 231
+15_Simple Merge_15; 401,289; 417,124; 414,251
+16_Simple Merge_16; 190; 1,188; 188
